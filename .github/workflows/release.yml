@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Publish (self-contained, single file)
+        shell: pwsh
+        run: |
+          dotnet publish "./PhoneDebug.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -o "./publish"
+
+      - name: Create zip
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "./publish/phone-debug.exe" -DestinationPath "./publish/phone-debug.zip" -Force
+
+      - name: Attach to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./publish/phone-debug.zip
+            ./publish/phone-debug.exe
+            ./install.ps1
+          generate_release_notes: true
