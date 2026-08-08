@@ -6,7 +6,7 @@ Android via USB. Executar `phone-debug` e ele trata do resto.
 ## Instalação (uma linha, para qualquer utilizador)
 
 ```powershell
-irm https://github.com/<SEU-UTILIZADOR>/phone-debug/releases/latest/download/install.ps1 | iex
+irm https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest/download/install.ps1 | iex
 ```
 
 O instalador transfere o executável da **última release** do GitHub, põe
@@ -107,7 +107,7 @@ git init
 git add .
 git commit -m "Inicial"
 git branch -M main
-git remote add origin https://github.com/SEU-UTILIZADOR/phone-debug.git
+git remote add origin https://github.com/AdnilsonBarbosa/PhoneDebug.git
 git push -u origin main
 git tag v0.1.0
 git push origin v0.1.0
@@ -121,7 +121,7 @@ git push origin v0.1.0
 4. A partir daí, uma linha instala em qualquer PC Windows:
 
 ```powershell
-irm https://github.com/SEU-UTILIZADOR/phone-debug/releases/latest/download/install.ps1 | iex
+irm https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest/download/install.ps1 | iex
 ```
 
 ### Compilar manualmente
