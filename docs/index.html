@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phone Debug - Mirror and control an Android phone from your PC</title>
+<meta name="description" content="Phone Debug mirrors an Android phone on your Windows PC. Plug in or pair over Wi-Fi, and control the phone with mouse and keyboard. Both a CLI and a Windows app.">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #0f1115; color: #e8eaed; line-height: 1.55;
+  }
+  header {
+    padding: 4rem 1.5rem 2.5rem; text-align: center;
+    background: radial-gradient(1200px 400px at 50% -20%, #16324f, transparent);
+  }
+  h1 { font-size: 2.4rem; margin: 0 0 .4rem; letter-spacing: .5px; }
+  h1 span { color: #4da3ff; }
+  .tagline { color: #9aa4b2; font-size: 1.08rem; max-width: 640px; margin: 0 auto; }
+  .badges { margin-top: 1rem; }
+  .badges img { height: 22px; margin-right: .35rem; }
+  .row { margin: 1.6rem auto 0; display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
+  .row .badges { display: inline-flex; align-items: center; gap: .35rem; }
+  .btn {
+    display: inline-block; padding: .8rem 1.6rem; border-radius: 10px;
+    text-decoration: none; font-weight: 600; font-size: 1rem;
+  }
+  .btn-primary { background: #2f81f7; color: #fff; }
+  .btn-secondary { background: #1f2328; color: #e8eaed; border: 1px solid #3d4148; }
+  main { max-width: 900px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+  .code {
+    background: #161a20; border: 1px solid #262b33; border-radius: 8px;
+    padding: 1rem 1.2rem; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .92rem; overflow-x: auto; color: #9cdcfe;
+  }
+  h2 { margin-top: 2.6rem; color: #4da3ff; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+  .card {
+    background: #15181e; border: 1px solid #262b33; border-radius: 12px; padding: 1.1rem 1.2rem;
+  }
+  .card b { display: block; margin-bottom: .25rem; color: #fff; }
+  .card p { margin: 0; color: #9aa4b2; font-size: .95rem; }
+  ul { padding-left: 1.1rem; }
+  li { margin-bottom: .4rem; color: #c3c9d4; }
+  footer { color: #6b7280; text-align: center; padding: 1rem 0 2.5rem; font-size: .85rem; }
+  footer a { color: #8ab4f8; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Phone <span>Debug</span></h1>
+  <p class="tagline">Plug in an Android phone and see it on your PC. Control it
+  with your mouse and keyboard - no typing on the phone, no cable juggling.</p>
+
+  <div class="row">
+    <a class="btn btn-primary" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest">Download for Windows</a>
+    <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases">All releases</a>
+    <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug">Source code</a>
+  </div>
+
+  <div class="row">
+    <span class="badges">
+      <img alt="release" src="https://img.shields.io/github/v/release/AdnilsonBarbosa/PhoneDebug?label=release&sort=semver">
+      <img alt="build" src="https://img.shields.io/github/actions/workflow/status/AdnilsonBarbosa/PhoneDebug/release.yml?label=build">
+      <img alt="licence" src="https://img.shields.io/github/license/AdnilsonBarbosa/PhoneDebug">
+      <img alt="downloads" src="https://img.shields.io/github/downloads/AdnilsonBarbosa/PhoneDebug/total">
+    </span>
+  </div>
+</header>
+
+<main>
+  <h2>Install</h2>
+  <ol>
+    <li>Download the <b>release zip</b> from the button above and unzip it.</li>
+    <li>Run <code>install.ps1</code></li>
+    <li>Reopen the terminal and run
+      <div class="code">phone-debug</div>
+    </li>
+  </ol>
+
+  <h2>How it works</h2>
+  <div class="grid">
+    <div class="card"><b>Plug &amp; mirror</b><p>When you connect a phone, the
+      screen opens automatically. Unplug and it goes back to waiting.</p></div>
+    <div class="card"><b>Wireless (Wi-Fi)</b><p>No cable needed. The QR pairing
+      screen connects you over your Wi-Fi network.</p></div>
+    <div class="card"><b>Stubborn phones</b><p>Phones that ignore normal input
+      (Xiaomi, POCO, Redmi) are controlled with an emulated USB keyboard and
+      mouse. Automatic.</p></div>
+    <div class="card"><b>Two front ends</b><p>The same engine behind a command
+      line and a small Windows app. Pick whichever you like.</p></div>
+  </div>
+
+  <h2>Capabilities</h2>
+  <ul>
+    <li>Auto-detection with model, Android version and serial</li>
+    <li>Full mouse and keyboard control of the mirrored screen</li>
+    <li>Install APKs, take screenshots, stream the log</li>
+    <li>One device shown once, even if it shows up via USB and Wi-Fi</li>
+    <li>Per-user install, no administrator rights</li>
+  </ul>
+</main>
+
+<footer>
+  MIT licensed · built with .NET · on GitHub ·
+  <a href="https://github.com/AdnilsonBarbosa/PhoneDebug">AdnilsonBarbosa/PhoneDebug</a>
+</footer>
+</body>
+</html>

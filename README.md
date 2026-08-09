@@ -7,6 +7,26 @@ Same engine, two front ends: a command line and a small Windows app.
 
 ![Phone Debug](assets/screenshot.png)
 
+![release](https://img.shields.io/github/v/release/AdnilsonBarbosa/PhoneDebug?label=release&sort=semver)
+![build](https://img.shields.io/github/actions/workflow/status/AdnilsonBarbosa/PhoneDebug/release.yml?label=build)
+![licence](https://img.shields.io/github/license/AdnilsonBarbosa/PhoneDebug)
+![platform](https://img.shields.io/badge/OS-Windows%2010%2F11-blue)
+![downloads](https://img.shields.io/github/downloads/AdnilsonBarbosa/PhoneDebug/total)
+
+**Get the latest version:** download the
+[release zip](https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest),
+unpack it, and run `install.ps1` - it sets adb and scrcpy up for you.
+
+## Features
+
+- **Plug and mirror** - connect, it opens the screen and you control it
+- **Wi-Fi pairing** - QR code pairing, no cable required (`phone-debug connect`)
+- **Windows app and CLI** - the same engine behind both
+- **Works on hard phones** - Xiaomi / POCO / Redmi devices that block injected
+  input are driven with an emulated USB keyboard and mouse, automatically
+- **One device, one entry** - duplicate USB/Wi-Fi registrations merged
+- Installer and uninstaller for the current user - no admin rights
+
 ## Requirements
 
 - Windows 10 or 11 (x64)
