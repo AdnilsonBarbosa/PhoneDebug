@@ -76,6 +76,8 @@ internal static class Program
 
         var core = PhoneDebugContext.Create();
 
+        core = await EnsureToolsAsync(core, needsMirroring, showChecks, ct).ConfigureAwait(false);
+
         if (!Report(core.Tools.Adb, showChecks))
             return ExitCodes.MissingTool;
 
@@ -98,6 +100,46 @@ internal static class Program
             CliCommand.Pair => await ConnectCommand.RunPair(core, parsed.Arguments, ct).ConfigureAwait(false),
             _ => ExitCodes.Error,
         };
+    }
+
+    /// <summary>
+    /// Tries to fetch a missing tool from its official source before giving up.
+    /// The portable package ships without adb/scrcpy (their licences do not
+    /// allow redistribution), so the first run downloads them into tools\.
+    /// </summary>
+    private static async Task<PhoneDebugContext> EnsureToolsAsync(
+        PhoneDebugContext core, bool needsMirroring, bool showChecks, CancellationToken ct)
+    {
+        var needAdb = !core.Tools.Adb.Found;
+        var needScrcpy = needsMirroring && !core.Tools.Scrcpy.Found;
+        if (!needAdb && !needScrcpy)
+            return core;
+
+        // Locked-down machines may not want a first-run download. Documented
+        // in the README and tools\README.md.
+        if (Environment.GetEnvironmentVariable("PHONEDEBUG_NO_DOWNLOAD") == "1")
+            return core;
+
+        if (!showChecks)
+            Ui.Header();
+
+        Ui.Line();
+        Ui.Line("Phone Debug is ready to go, but a tool is missing. Downloading it now:");
+        if (needAdb) Ui.Line("  adb    - from Google (Android platform-tools)");
+        if (needScrcpy) Ui.Line("  scrcpy - from GitHub (official Windows build)");
+        Ui.Line("Skip this with:  $env:PHONEDEBUG_NO_DOWNLOAD = \"1\"");
+        Ui.Blank();
+
+        var progress = new Progress<string>(Ui.Hint);
+        var outcome = await ToolDownloader.DownloadMissingAsync(progress, ct).ConfigureAwait(false);
+
+        if (outcome.AdbDownloaded)
+            Ui.Ok("ADB downloaded");
+        if (outcome.ScrcpyDownloaded)
+            Ui.Ok("scrcpy downloaded");
+
+        // Re-detect: the freshly downloaded binaries are now on the tool path.
+        return PhoneDebugContext.Create(probeVersions: false);
     }
 
     /// <summary>Prints the "✓ ADB found" line, or explains how to install what is missing.</summary>

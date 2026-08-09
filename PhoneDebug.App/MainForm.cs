@@ -318,6 +318,7 @@ internal sealed class MainForm : Form
         _banner.Visible = false;
 
         var core = await Task.Run(() => PhoneDebugContext.Create()).ConfigureAwait(true);
+        core = await EnsureToolsAsync(core).ConfigureAwait(true);
         _core = core;
 
         if (!core.CanUseDevices)
@@ -334,6 +335,41 @@ internal sealed class MainForm : Form
         _monitor = core.CreateMonitor();
         _monitor.Changed += OnMonitorChanged;
         _monitor.Start();
+    }
+
+    /// <summary>
+    /// A fresh portable install has no adb/scrcpy next to PhoneDebug.exe (their
+    /// licences prevent PhoneDebug from shipping them). When one is missing, it
+    /// is fetched from its official source once and then re-detected.
+    /// </summary>
+    private async Task<PhoneDebugContext> EnsureToolsAsync(PhoneDebugContext core)
+    {
+        var needAdb = !core.Tools.Adb.Found;
+        var needScrcpy = !core.Tools.Scrcpy.Found;
+        if (!needAdb && !needScrcpy)
+            return core;
+
+        // Locked-down machines may not want a first-run download.
+        if (Environment.GetEnvironmentVariable("PHONEDEBUG_NO_DOWNLOAD") == "1")
+            return core;
+
+        var what = needAdb && needScrcpy ? "adb and scrcpy"
+            : needAdb ? "adb"
+            : "scrcpy";
+
+        SetStatus("○", "Downloading tools...", Theme.Accent);
+        Append($"Phone Debug is ready to go, but {what} is missing. Downloading it now...");
+
+        var progress = new Progress<string>(message => RunOnUi(() => Append(message, raw: true)));
+        var outcome = await Task.Run(
+            () => ToolDownloader.DownloadMissingAsync(progress)).ConfigureAwait(true);
+
+        if (outcome.AdbDownloaded)
+            Append("ADB downloaded from Google.");
+        if (outcome.ScrcpyDownloaded)
+            Append("scrcpy downloaded from GitHub.");
+
+        return await Task.Run(() => PhoneDebugContext.Create(probeVersions: false)).ConfigureAwait(true);
     }
 
     private void ShowToolProblem(ToolStatus tool, bool fatal = true)

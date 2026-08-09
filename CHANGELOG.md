@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+- Truly portable: unzip anywhere and run. On first use Phone Debug downloads
+  the current official `adb` and `scrcpy` builds into `tools\` from their own
+  sources (Google / GitHub), so no install, PATH or winget is needed
+- adb/scrcpy are no longer installed through winget by the installer; they are
+  fetched on demand instead (opt out with `PHONEDEBUG_NO_DOWNLOAD=1`)
+- Tool downloads stream progress and land version-pinned, official binaries
+
 ## 0.3.0
 
 - Releases are signed with GitHub build provenance - verify with

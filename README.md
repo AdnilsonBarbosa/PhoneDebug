@@ -15,7 +15,9 @@ Same engine, two front ends: a command line and a small Windows app.
 
 **Get the latest version:** download the
 [release zip](https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest),
-unpack it, and run `install.ps1` - it sets adb and scrcpy up for you.
+unpack it, and run either `phone-debug.exe` or `PhoneDebug.exe` - the first run
+downloads adb and scrcpy for you. Or run `install.ps1` to add a Start Menu
+entry and put `phone-debug` on your PATH.
 
 ## Features
 
@@ -31,7 +33,8 @@ unpack it, and run `install.ps1` - it sets adb and scrcpy up for you.
 
 - Windows 10 or 11 (x64)
 - [adb](https://developer.android.com/tools/releases/platform-tools) and
-  [scrcpy](https://github.com/Genymobile/scrcpy) - the installer sets both up for you
+  [scrcpy](https://github.com/Genymobile/scrcpy) - the first run downloads
+  both for you from their official sources
 - A phone with **USB debugging** enabled
   (Settings > About phone > tap *Build number* 7 times, then
   Settings > System > Developer options > USB debugging)
@@ -40,15 +43,23 @@ Releases carry their own .NET runtime, so nothing else is needed.
 
 ## Install
 
-Download the release zip, unpack it, and run:
+Either run the executables straight from the unpacked folder - **portable, no
+installation** - or install for convenience:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
 That copies Phone Debug to `%LOCALAPPDATA%\PhoneDebug\bin`, puts it on your
-PATH, adds a Start Menu entry and installs adb and scrcpy through winget if
-they are missing. No administrator rights, nothing changed system-wide.
+PATH, and adds a Start Menu entry. No administrator rights, nothing changed
+system-wide.
+
+adb and scrcpy are **not** part of the release (their licences prohibit
+redistribution). The first time you run Phone Debug and a tool is missing, it
+downloads the current official build from Google / GitHub into the `tools`
+folder next to the app - see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+Set `$env:PHONEDEBUG_NO_DOWNLOAD = "1"` first to opt out (e.g. on a
+locked-down machine that supplies its own tools).
 
 To remove it:
 
@@ -142,7 +153,7 @@ screen as the command line.
 
 | What you see | What to do |
 | --- | --- |
-| `ADB not found` / `scrcpy not found` | Rerun `install.ps1`, or `winget install Google.PlatformTools Genymobile.scrcpy`, then open a new terminal |
+| `ADB not found` / `scrcpy not found` | Phone Debug normally downloads them on first run. If the download was skipped (`PHONEDEBUG_NO_DOWNLOAD`) or failed, install with `winget install Google.PlatformTools Genymobile.scrcpy`, or drop the files into the `tools` folder, then start again |
 | `Android device detected` but nothing happens | Unlock the phone and accept **Allow USB debugging** |
 | `The device is offline` | Unplug and reconnect, or toggle USB debugging off and on |
 | `phone-debug` is not recognised | Open a *new* terminal - PATH changes do not reach open ones |
@@ -153,9 +164,9 @@ screen as the command line.
 | Nothing connects at all | `phone-debug connect` - it walks through USB and Wi-Fi setup |
 | Anything else | `%LOCALAPPDATA%\PhoneDebug\logs\phone-debug.log` has the technical detail |
 
-Portable setup: drop `adb.exe` and `scrcpy.exe` into the `tools` folder next to
-the executables and they are used instead of the installed ones - see
-[tools/README.md](tools/README.md).
+Portable setup: the first run downloads `adb.exe` and `scrcpy.exe` into the
+`tools` folder next to the executables; drop your own copies there instead and
+they are used in preference. See [tools/README.md](tools/README.md).
 
 ## Security
 

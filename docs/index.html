@@ -8,112 +8,470 @@
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' https://img.shields.io; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
 <style>
-  :root { color-scheme: dark; }
+  :root {
+    color-scheme: dark;
+    --bg: #0b0e14;
+    --bg-soft: #0f131b;
+    --card: #12161f;
+    --card-hover: #171c28;
+    --border: #232a37;
+    --border-soft: #1b222e;
+    --text: #e8eaed;
+    --muted: #9aa4b2;
+    --faint: #6b7280;
+    --accent: #4da3ff;
+    --accent-2: #7c5cff;
+    --grad: linear-gradient(135deg, #4da3ff, #7c5cff);
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --radius: 14px;
+    --radius-lg: 20px;
+  }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     margin: 0;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: #0f1115; color: #e8eaed; line-height: 1.55;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
   }
-  header {
-    padding: 4rem 1.5rem 2.5rem; text-align: center;
-    background: radial-gradient(1200px 400px at 50% -20%, #16324f, transparent);
+  ::selection { background: rgba(77,163,255,.35); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  section { scroll-margin-top: 84px; }
+
+  /* ---------------------------------------------------------------- nav */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; padding: .85rem 1.5rem;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-soft);
   }
-  h1 { font-size: 2.4rem; margin: 0 0 .4rem; letter-spacing: .5px; }
-  h1 span { color: #4da3ff; }
-  .tagline { color: #9aa4b2; font-size: 1.08rem; max-width: 640px; margin: 0 auto; }
-  .badges { margin-top: 1rem; }
-  .badges img { height: 22px; margin-right: .35rem; }
-  .row { margin: 1.6rem auto 0; display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
-  .row .badges { display: inline-flex; align-items: center; gap: .35rem; }
+  .brand { display: flex; align-items: center; gap: .6rem; font-weight: 700; font-size: 1.02rem; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: var(--grad); display: grid; place-items: center; color: #fff;
+    font-weight: 800; font-size: .82rem; box-shadow: 0 4px 14px rgba(77,163,255,.35);
+  }
+  .nav-links { display: flex; gap: 1.4rem; font-size: .93rem; }
+  .nav-links a { color: var(--muted); }
+  .nav-links a:hover { color: var(--text); text-decoration: none; }
+  .nav-cta {
+    padding: .48rem .95rem; border-radius: 999px; background: var(--grad); color: #fff;
+    font-weight: 600; font-size: .88rem; box-shadow: 0 4px 16px rgba(124,92,255,.35);
+  }
+  .nav-cta:hover { color: #fff; text-decoration: none; filter: brightness(1.08); }
+
+  /* ---------------------------------------------------------------- hero */
+  .hero {
+    position: relative; overflow: hidden;
+    padding: 5rem 1.5rem 4.5rem; text-align: center;
+  }
+  .hero::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(900px 480px at 18% -8%, rgba(77,163,255,.16), transparent 60%),
+      radial-gradient(900px 480px at 82% -8%, rgba(124,92,255,.14), transparent 60%),
+      radial-gradient(700px 300px at 50% 115%, rgba(77,163,255,.10), transparent 60%);
+  }
+  .hero > * { position: relative; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-size: .8rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600;
+    border: 1px solid var(--border); background: var(--card);
+    padding: .35rem .9rem; border-radius: 999px;
+  }
+  .eyebrow::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 0 0 rgba(63,185,80,.5); animation: pulse 2.4s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(63,185,80,.45); }
+    70% { box-shadow: 0 0 0 9px rgba(63,185,80,0); }
+    100% { box-shadow: 0 0 0 0 rgba(63,185,80,0); }
+  }
+  h1 {
+    font-size: clamp(2.2rem, 5.5vw, 3.6rem);
+    font-weight: 800; letter-spacing: -.5px; margin: 1.1rem auto .7rem;
+    max-width: 760px; line-height: 1.12;
+  }
+  .grad-text {
+    background: var(--grad);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .tagline {
+    color: var(--muted); font-size: clamp(1rem, 2.2vw, 1.16rem);
+    max-width: 620px; margin: 0 auto 1.8rem;
+  }
+  .row { margin-top: 1.6rem; display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
   .btn {
-    display: inline-block; padding: .8rem 1.6rem; border-radius: 10px;
-    text-decoration: none; font-weight: 600; font-size: 1rem;
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .8rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: .98rem;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
   }
-  .btn-primary { background: #2f81f7; color: #fff; }
-  .btn-secondary { background: #1f2328; color: #e8eaed; border: 1px solid #3d4148; }
-  main { max-width: 900px; margin: 0 auto; padding: 0 1.5rem 3rem; }
-  .code {
-    background: #161a20; border: 1px solid #262b33; border-radius: 8px;
-    padding: 1rem 1.2rem; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-    font-size: .92rem; overflow-x: auto; color: #9cdcfe;
+  .btn:hover { text-decoration: none; transform: translateY(-2px); }
+  .btn-primary {
+    background: var(--grad); color: #fff;
+    box-shadow: 0 8px 24px rgba(77,163,255,.30);
   }
-  h2 { margin-top: 2.6rem; color: #4da3ff; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-secondary {
+    background: var(--card); color: var(--text); border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--text); }
+  .badges { margin-top: 1.9rem; display: flex; gap: .35rem; justify-content: center; flex-wrap: wrap; }
+  .badges img { height: 22px; }
+
+  /* ------------------------------------------------------------ phone mock */
+  .mock-wrap { margin-top: 3.4rem; display: grid; place-items: center; position: relative; }
+  .mock-glow {
+    position: absolute; width: 520px; height: 320px; border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(77,163,255,.28), transparent);
+    filter: blur(30px); pointer-events: none;
+  }
+  .phone {
+    width: 258px; border-radius: 38px; padding: 11px;
+    background: linear-gradient(160deg, #2a3342, #141922);
+    border: 1px solid var(--border); box-shadow: 0 30px 70px rgba(0,0,0,.55);
+    position: relative;
+  }
+  .phone-notch {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    width: 96px; height: 22px; border-radius: 999px; background: #06080d; z-index: 2;
+  }
+  .phone-screen {
+    border-radius: 28px; overflow: hidden; background: linear-gradient(160deg, #1b2130, #0e1219);
+    border: 1px solid var(--border-soft); aspect-ratio: 9/19.2;
+  }
+  .statusbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px 6px; font-size: .62rem; color: var(--muted);
+  }
+  .statusbar .time { font-weight: 600; color: var(--text); }
+  .screen-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .app-bar {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--card); border: 1px solid var(--border-soft);
+    border-radius: 10px; padding: 8px 9px;
+  }
+  .avatar { width: 18px; height: 18px; border-radius: 6px; background: var(--grad); }
+  .app-bar .lines { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .app-bar .lines i { height: 5px; border-radius: 3px; background: var(--border); display: block; }
+  .app-bar .lines i:first-child { width: 62%; background: var(--muted); }
+  .app-bar .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); }
+  .tile {
+    background: var(--card); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 9px 11px;
+  }
+  .tile .bar { height: 6px; border-radius: 3px; background: var(--border-soft); margin-bottom: 6px; }
+  .tile .bar.hot { background: linear-gradient(90deg, var(--accent), var(--accent-2)); width: 78%; }
+  .tile .cols { display: flex; gap: 8px; }
+  .tile .cols i { flex: 1; height: 40px; border-radius: 8px; background: linear-gradient(160deg, #1f2836, #171d29); border: 1px solid var(--border-soft); }
+  .float-chip {
+    display: inline-flex; align-items: center; gap: .5rem;
+    margin-top: 1.2rem; padding: .55rem 1.1rem; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--border);
+    font-size: .86rem; color: var(--muted);
+    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+  }
+  .float-chip .live { color: var(--green); font-weight: 600; }
+
+  /* ---------------------------------------------------------------- main */
+  main { max-width: 960px; margin: 0 auto; padding: 1rem 1.5rem 4rem; }
+  h2 {
+    font-size: clamp(1.5rem, 3.4vw, 2rem); letter-spacing: -.3px; margin: 3rem 0 .6rem;
+  }
+  .section-sub { color: var(--muted); max-width: 640px; margin: 0 0 1.4rem; }
+
+  /* ------------------------------------------------------------ how it works */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+  .step {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.4rem 1.4rem 1.5rem; position: relative; transition: transform .15s ease, border-color .15s ease;
+  }
+  .step:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .step-num {
+    width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+    background: var(--grad); color: #fff; font-weight: 700; font-size: .95rem;
+    box-shadow: 0 5px 14px rgba(77,163,255,.3); margin-bottom: .9rem;
+  }
+  .step b { display: block; margin-bottom: .3rem; color: #fff; font-size: 1.02rem; }
+  .step p { margin: 0; color: var(--muted); font-size: .92rem; }
+
+  /* ---------------------------------------------------------------- features */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
   .card {
-    background: #15181e; border: 1px solid #262b33; border-radius: 12px; padding: 1.1rem 1.2rem;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.5rem 1.5rem 1.6rem; transition: transform .15s ease, border-color .15s ease, background .15s ease;
   }
-  .card b { display: block; margin-bottom: .25rem; color: #fff; }
-  .card p { margin: 0; color: #9aa4b2; font-size: .95rem; }
-  ul { padding-left: 1.1rem; }
-  li { margin-bottom: .4rem; color: #c3c9d4; }
-  footer { color: #6b7280; text-align: center; padding: 1rem 0 2.5rem; font-size: .85rem; }
-  footer a { color: #8ab4f8; }
+  .card:hover { transform: translateY(-3px); border-color: var(--accent); background: var(--card-hover); }
+  .card .icon {
+    width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+    background: linear-gradient(160deg, #1a2230, #141a26); border: 1px solid var(--border);
+    margin-bottom: 1rem;
+  }
+  .card .icon svg { width: 22px; height: 22px; stroke: var(--accent); }
+  .card b { display: block; margin-bottom: .3rem; color: #fff; font-size: 1.05rem; }
+  .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+
+  /* ---------------------------------------------------------------- code */
+  .code {
+    background: #0d0f14; border: 1px solid var(--border); border-radius: 14px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .9rem;
+    overflow-x: auto; padding: 1.05rem 1.25rem; color: #c9d1d9; line-height: 1.65; margin: 0;
+  }
+  .code-title {
+    display: flex; align-items: center; gap: .45rem; padding: .7rem 1.25rem;
+    border: 1px solid var(--border); border-bottom: 0; border-radius: 14px 14px 0 0;
+    background: var(--card); font-family: ui-monospace, monospace; font-size: .78rem; color: var(--faint);
+  }
+  .code-title .traffic { margin-right: .6rem; display: inline-flex; gap: .35rem; }
+  .code-title .traffic i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .traffic i:nth-child(1) { background: #f85149; }
+  .traffic i:nth-child(2) { background: #d29922; }
+  .traffic i:nth-child(3) { background: #3fb950; }
+  .code .ok { color: var(--green); }
+  .code .acc { color: var(--accent); }
+  .code .dim { color: var(--faint); }
+  .code .line { display: block; }
+
+  /* ---------------------------------------------------------------- faq */
+  .faq { display: flex; flex-direction: column; gap: .7rem; }
+  details {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: .2rem 1.1rem;
+  }
+  details[open] { border-color: var(--accent); }
+  summary {
+    cursor: pointer; list-style: none; padding: .9rem 0; font-weight: 600; color: #fff;
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  }
+  summary::-webkit-details-marker { display: none; }
+  details p { color: var(--muted); margin: 0 0 1rem; font-size: .94rem; }
+  details code { background: var(--bg-soft); border: 1px solid var(--border-soft); border-radius: 5px; padding: .1rem .35rem; font-size: .86em; }
+
+  /* ---------------------------------------------------------------- footer */
+  footer {
+    border-top: 1px solid var(--border-soft); color: var(--faint); text-align: center;
+    padding: 2rem 1.5rem 2.6rem; font-size: .88rem;
+  }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--accent); }
+  .footer-links { display: flex; gap: 1.2rem; justify-content: center; margin-top: .6rem; }
+
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .hero { padding-top: 3.4rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; scroll-behavior: auto !important; }
+    .btn, .card, .step { transition: none; }
+  }
 </style>
 </head>
 <body>
+
+<nav>
+  <div class="brand">
+    <span class="brand-mark">PD</span>
+    Phone Debug
+  </div>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#cli">CLI</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <a class="nav-cta" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest">Download</a>
+</nav>
+
 <header>
-  <h1>Phone <span>Debug</span></h1>
-  <p class="tagline">Plug in an Android phone and see it on your PC. Control it
-  with your mouse and keyboard - no typing on the phone, no cable juggling.</p>
+  <div class="hero">
+    <span class="eyebrow">Ready · Open source · Windows</span>
+    <h1>Your phone's screen, <span class="grad-text">right on your PC</span></h1>
+    <p class="tagline">Plug in an Android phone and it appears on your desktop -
+    control it with your mouse and keyboard. No typing on the tiny screen, no
+    cable juggling. Works with a USB cable <em>or</em> over Wi-Fi.</p>
 
-  <div class="row">
-    <a class="btn btn-primary" id="dl-btn" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest">Download the Windows app</a>
-    <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest/download/PhoneDebug.exe">app only (PhoneDebug.exe)</a>
-    <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug">Source code</a>
-  </div>
-  <div class="row">
-    <p style="margin:0.5rem 0 0;color:#9aa4b2;font-size:.92rem">
-      developers who prefer the terminal:
-      <a style="color:#8ab4f8" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest/download/phone-debug.exe">phone-debug.exe</a>
-    </p>
-  </div>
+    <div class="row">
+      <a class="btn btn-primary" id="dl-btn" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest">
+        Download the Windows app
+      </a>
+      <a class="btn btn-secondary" href="#how">See how it works</a>
+    </div>
 
-  <div class="row">
-    <span class="badges">
+    <div class="row">
+      <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest/download/PhoneDebug.exe">app only (PhoneDebug.exe)</a>
+      <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug">Source code</a>
+      <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest/download/phone-debug.exe">CLI only (phone-debug.exe)</a>
+    </div>
+
+    <div class="badges">
       <img alt="release" src="https://img.shields.io/github/v/release/AdnilsonBarbosa/PhoneDebug?label=release&sort=semver">
       <img alt="build" src="https://img.shields.io/github/actions/workflow/status/AdnilsonBarbosa/PhoneDebug/release.yml?label=build">
       <img alt="licence" src="https://img.shields.io/github/license/AdnilsonBarbosa/PhoneDebug">
       <img alt="downloads" src="https://img.shields.io/github/downloads/AdnilsonBarbosa/PhoneDebug/total">
-    </span>
+    </div>
+
+    <div class="mock-wrap">
+      <div class="mock-glow"></div>
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="statusbar">
+            <span class="time">9:41</span>
+            <span>mirroring...</span>
+          </div>
+          <div class="screen-body">
+            <div class="app-bar">
+              <span class="avatar"></span>
+              <span class="lines"><i></i><i></i></span>
+              <span class="dot"></span>
+            </div>
+            <div class="tile"><span class="bar hot"></span><div class="cols"><i></i><i></i><i></i></div></div>
+            <div class="tile"><span class="bar"></span><span class="bar" style="width:55%"></span></div>
+            <div class="tile"><span class="bar"></span><div class="cols"><i></i><i></i></div></div>
+          </div>
+        </div>
+      </div>
+      <span class="float-chip"><span class="live">● Live</span> 60 fps · control with mouse</span>
+    </div>
   </div>
 </header>
 
 <main>
-  <h2>Install</h2>
-  <ol>
-    <li>Download the <b>release zip</b> from the button above and unzip it.</li>
-    <li>Run <code>install.ps1</code> - it installs adb and scrcpy for you.</li>
-    <li>The <b>Phone Debug</b> app opens by itself. Plug in your phone and it
-      mirrors the screen.</li>
-  </ol>
+  <section id="how">
+    <h2>Barely two steps from plugging in</h2>
+    <p class="section-sub">Phone Debug finds your phone, asks you to trust it once,
+    and opens the screen. Everything else is automatic.</p>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">1</span>
+        <b>Download and unzip</b>
+        <p>Grab the release zip and extract it anywhere. The first run downloads
+        adb and scrcpy into the <code>tools</code> folder for you - nothing to
+        install system-wide.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <b>Enable USB debugging</b>
+        <p>Settings &gt; About phone &gt; tap <em>Build number</em> 7 times, then
+        Developer options &gt; USB debugging. Phone Debug guides you through it
+        if you get stuck.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <b>Connect and mirror</b>
+        <p>Plug in the cable, or pair over Wi-Fi with a QR code. The screen opens
+        by itself, and unplugging sends it back to waiting.</p>
+      </div>
+    </div>
+  </section>
 
-  <h2>How it works</h2>
-  <div class="grid">
-    <div class="card"><b>Plug &amp; mirror</b><p>When you connect a phone, the
-      screen opens automatically. Unplug and it goes back to waiting.</p></div>
-    <div class="card"><b>Wireless (Wi-Fi)</b><p>No cable needed. The QR pairing
-      screen connects you over your Wi-Fi network.</p></div>
-    <div class="card"><b>Stubborn phones</b><p>Phones that ignore normal input
-      (Xiaomi, POCO, Redmi) are controlled with an emulated USB keyboard and
-      mouse. Automatic.</p></div>
-    <div class="card"><b>Two front ends</b><p>The same engine behind a command
-      line and a small Windows app. Pick whichever you like.</p></div>
-  </div>
+  <section id="features">
+    <h2>Built for real phones</h2>
+    <p class="section-sub">The small things that make the difference between a
+    toy mirror and a daily driver.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M8 12h8M12 8v8"/></svg></div>
+        <b>Plug &amp; mirror</b>
+        <p>Connect a phone and the screen opens automatically. Unplug and it goes
+        back to waiting. No commands, no flags.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5a9 9 0 0 1 14 0"/><path d="M8.5 15.5a5 5 0 0 1 7 0"/><path d="M12 18.5h.01"/></svg></div>
+        <b>Wireless (Wi-Fi)</b>
+        <p>No cable needed. The QR pairing screen connects you over your Wi-Fi
+        network in a couple of taps.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M11 6h2"/></svg></div>
+        <b>Stubborn phones</b>
+        <p>Phones that ignore normal input (Xiaomi, POCO, Redmi) are controlled
+        with an emulated USB keyboard and mouse. Automatic.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+        <b>Two front ends</b>
+        <p>The same engine behind a command line and a small Windows app. Pick
+        whichever you like - they behave identically.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 18 0v1a2 2 0 0 1-2 2h-1a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h1"/><path d="M3 13v1a2 2 0 0 0 2 2h1a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1H5"/></svg></div>
+        <b>Install APKs &amp; more</b>
+        <p>Install apps, take screenshots, stream the Android log, reboot, and
+        see full device info - without leaving the app.</p>
+      </div>
+      <div class="card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 3"/></svg></div>
+        <b>One device, shown once</b>
+        <p>Duplicate entries (USB + Wi-Fi, or a double mDNS registration) merge
+        into a single device so you never chase a ghost.</p>
+      </div>
+    </div>
+  </section>
 
-  <h2>Capabilities</h2>
-  <ul>
-    <li>Auto-detection with model, Android version and serial</li>
-    <li>Full mouse and keyboard control of the mirrored screen</li>
-    <li>Install APKs, take screenshots, stream the log</li>
-    <li>One device shown once, even if it shows up via USB and Wi-Fi</li>
-    <li>Per-user install, no administrator rights</li>
-  </ul>
+  <section id="cli">
+    <h2>Terminal people, this is yours</h2>
+    <p class="section-sub">Everything the app can do is one <code>phone-debug</code>
+    command away.</p>
+    <div class="code-title">
+      <span class="traffic"><i></i><i></i><i></i></span>
+      PS&gt; phone-debug
+    </div>
+    <pre class="code"><span class="dim">Phone Debug 0.4.0</span><span class="line"> </span><span class="ok">✓ ADB found</span>          <span class="dim">✓ scrcpy found</span><span class="line"> </span><span class="dim">Waiting for Android device...</span><span class="line"> </span><span class="ok">✓ Samsung Galaxy S24 connected  ·  Android 15</span><span class="line">Starting mirror...</span></pre>
+  </section>
+
+  <section id="faq">
+    <h2>Questions, answered</h2>
+    <div class="faq">
+      <details open>
+        <summary>Do I need to install adb or scrcpy?</summary>
+        <p>No. Phone Debug downloads the current official builds into its
+        <code>tools</code> folder on first run - from Google and GitHub, straight
+        onto your machine. Set <code>$env:PHONEDEBUG_NO_DOWNLOAD = "1"</code>
+        before starting if you'd rather supply them yourself.</p>
+      </details>
+      <details>
+        <summary>Does it need administrator rights?</summary>
+        <p>No. Everything is installed for the current user only - the app, its
+        tools and the Start Menu entry. Nothing system-wide changes.</p>
+      </details>
+      <details>
+        <summary>What about phoones that block screen control?</summary>
+        <p>Some makers (Xiaomi, POCO, Redmi) refuse normal injected input. Phone
+        Debug notices and reopens the mirror as an emulated USB keyboard and
+        mouse, which those phones accept. If it still won't respond, enable
+        <em>USB debugging (Security settings)</em> and reboot the phone.</p>
+      </details>
+      <details>
+        <summary>Can I connect over Wi-Fi?</summary>
+        <p>Yes. <code>phone-debug connect</code> walks you through USB or Wi-Fi
+        pairing. For Wi-Fi it prints a QR code in the terminal (or app) that you
+        scan from the phone - no cable involved after that.</p>
+      </details>
+      <details>
+        <summary>What does this cost?</summary>
+        <p>Nothing. Phone Debug is MIT licensed, and the whole project is on
+        GitHub. Releases carry signed build provenance you can verify.</p>
+      </details>
+    </div>
+  </section>
 </main>
 
 <footer>
-  MIT licensed · built with .NET · on GitHub ·
+  MIT licensed · built with .NET ·
   <a href="https://github.com/AdnilsonBarbosa/PhoneDebug">AdnilsonBarbosa/PhoneDebug</a>
+  <div class="footer-links">
+    <a href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest">Releases</a>
+    <a href="https://github.com/AdnilsonBarbosa/PhoneDebug/blob/main/README.md">README</a>
+    <a href="https://github.com/AdnilsonBarbosa/PhoneDebug/blob/main/SECURITY.md">Security</a>
+  </div>
 </footer>
 
 <script>

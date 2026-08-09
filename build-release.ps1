@@ -9,7 +9,7 @@
         dist\PhoneDebug-v0.1.0-win-x64\
             PhoneDebug.exe      the Windows app
             phone-debug.exe     the command line
-            tools\              optional place for adb.exe / scrcpy.exe
+            tools\              tools are downloaded automatically on first run
             install.ps1
             uninstall.ps1
             README.md

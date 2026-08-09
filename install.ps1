@@ -7,8 +7,10 @@
     or from a clone of the repository - it detects which and does the right thing.
 
     It copies the program to %LOCALAPPDATA%\PhoneDebug\bin, puts that folder on
-    your PATH so "phone-debug" works from anywhere, adds a Start Menu shortcut,
-    and checks that adb and scrcpy are available.
+    your PATH so "phone-debug" works from anywhere, and adds a Start Menu
+    shortcut. adb and scrcpy are downloaded automatically by the app on first
+    run; if winget is available and they are still missing, they are installed
+    here as a fallback.
 
     Nothing is installed system-wide and no administrator rights are needed.
 
