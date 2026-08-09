@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using PhoneDebug.Core;
 using PhoneDebug.Core.Diagnostics;
@@ -18,20 +19,22 @@ internal sealed class MainForm : Form
 {
     private const int MaxLogLines = 1500;
 
-    private readonly Label _statusDot = new();
-    private readonly Label _statusText = new();
+    private readonly StatusChip _statusChip = new();
+    private readonly Card _deviceCard = new();
+    private readonly Panel _deviceIcon = new();
     private readonly Label _deviceName = new();
     private readonly Label _deviceVersion = new();
+    private readonly Card _bannerCard = new();
     private readonly Label _banner = new();
     private readonly LinkLabel _recheck = new();
     private readonly ComboBox _deviceSelector = new();
-    private readonly Button _mirrorButton = Theme.PrimaryButton("Open Screen");
-    private readonly Button _installButton = Theme.SecondaryButton("Install APK");
-    private readonly Button _screenshotButton = Theme.SecondaryButton("Screenshot");
+    private readonly RoundedButton _mirrorButton = Theme.PrimaryButton("Open Screen");
+    private readonly RoundedButton _installButton = Theme.SecondaryButton("Install APK");
+    private readonly RoundedButton _screenshotButton = Theme.SecondaryButton("Screenshot");
     private readonly CheckBox _logcatToggle = new();
     private readonly RichTextBox _log = new();
 
-    private TableLayoutPanel? _actions;
+    private Card? _actions;
     private PhoneDebugContext? _core;
     private DeviceMonitor? _monitor;
     private MirrorSession? _mirror;
@@ -49,8 +52,8 @@ internal sealed class MainForm : Form
         Font = Theme.Body;
         ForeColor = Theme.Text;
         StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(440, 620);
-        MinimumSize = new Size(400, 520);
+        ClientSize = new Size(470, 680);
+        MinimumSize = new Size(420, 560);
         Icon = LoadIcon();
 
         Controls.Add(BuildLayout());
@@ -83,33 +86,49 @@ internal sealed class MainForm : Form
         };
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
+        // Header: product name on the left, version chip on the right.
+        var header = new TableLayoutPanel
+        {
+            ColumnCount = 2,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, 0, 0, 10),
+        };
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+
         var title = new Label
         {
             Text = AppInfo.Name,
             Font = Theme.Title,
             ForeColor = Theme.Text,
             AutoSize = true,
-            Margin = new Padding(0, 0, 0, 14),
+            Margin = new Padding(0, 1, 0, 0),
         };
 
-        _statusDot.Text = "○";
-        _statusDot.Font = Theme.Status;
-        _statusDot.ForeColor = Theme.Muted;
-        _statusDot.AutoSize = true;
-        _statusDot.Margin = new Padding(0, 0, 6, 0);
+        var versionChip = new StatusChip
+        {
+            Text = $"v{AppInfo.Version}",
+            ShowDot = false,
+            Fill = Color.FromArgb(235, 237, 243),
+            ForeColor = Theme.Subtle,
+        };
 
-        _statusText.Text = "Starting...";
-        _statusText.Font = Theme.Status;
-        _statusText.ForeColor = Theme.Muted;
-        _statusText.AutoSize = true;
-        _statusText.Margin = new Padding(0, 1, 0, 0);
+        header.Controls.Add(title, 0, 0);
+        header.Controls.Add(versionChip, 1, 0);
+
+        // Status pill + "check again" link.
+        _statusChip.Text = "Starting...";
+        _statusChip.Fill = Color.FromArgb(238, 240, 246);
+        _statusChip.Margin = new Padding(0, 0, 0, 0);
 
         _recheck.Text = "Check again";
         _recheck.Font = Theme.Small;
         _recheck.AutoSize = true;
         _recheck.LinkColor = Theme.Accent;
         _recheck.ActiveLinkColor = Theme.AccentHover;
-        _recheck.Margin = new Padding(12, 3, 0, 0);
+        _recheck.Margin = new Padding(10, 4, 0, 0);
         _recheck.Visible = false;
 
         var statusRow = new FlowLayoutPanel
@@ -120,19 +139,56 @@ internal sealed class MainForm : Form
             WrapContents = false,
             Margin = new Padding(0, 0, 0, 12),
         };
-        statusRow.Controls.AddRange([_statusDot, _statusText, _recheck]);
+        statusRow.Controls.AddRange([_statusChip, _recheck]);
 
-        _deviceName.Text = "";
+        // Device card: the phone glyph, name and version (or the waiting hint).
+        _deviceIcon.Size = new Size(42, 42);
+        _deviceIcon.BackColor = Color.Transparent;
+        _deviceIcon.Paint += DrawPhone;
+
         _deviceName.Font = Theme.DeviceName;
         _deviceName.ForeColor = Theme.Text;
         _deviceName.AutoSize = true;
         _deviceName.Margin = new Padding(0, 0, 0, 2);
+        _deviceName.Text = "";
 
-        _deviceVersion.Text = "";
         _deviceVersion.Font = Theme.Body;
-        _deviceVersion.ForeColor = Theme.Muted;
+        _deviceVersion.ForeColor = Theme.Subtle;
         _deviceVersion.AutoSize = true;
-        _deviceVersion.Margin = new Padding(0, 0, 0, 10);
+        _deviceVersion.Margin = new Padding(0, 0, 0, 0);
+        _deviceVersion.Text = "";
+
+        var deviceText = new TableLayoutPanel
+        {
+            ColumnCount = 1,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Dock = DockStyle.Fill,
+        };
+        deviceText.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        deviceText.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        deviceText.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        deviceText.Controls.Add(_deviceName, 0, 0);
+        deviceText.Controls.Add(_deviceVersion, 0, 1);
+
+        var deviceRow = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Padding = new Padding(0),
+        };
+        deviceRow.Controls.Add(_deviceIcon);
+        deviceRow.Controls.Add(deviceText);
+
+        _deviceCard.Radius = 14f;
+        _deviceCard.BorderColor = Theme.Border;
+        _deviceCard.Padding = new Padding(14, 12, 14, 12);
+        _deviceCard.AutoSize = true;
+        _deviceCard.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        _deviceCard.Margin = new Padding(0, 0, 0, 10);
+        _deviceCard.Controls.Add(deviceRow);
 
         _deviceSelector.DropDownStyle = ComboBoxStyle.DropDownList;
         _deviceSelector.Font = Theme.Body;
@@ -143,38 +199,70 @@ internal sealed class MainForm : Form
         _banner.Font = Theme.Body;
         _banner.ForeColor = Theme.Danger;
         _banner.AutoSize = true;
-        _banner.Margin = new Padding(0, 0, 0, 10);
-        _banner.Visible = false;
+        _banner.Margin = new Padding(0, 2, 0, 2);
 
-        var actions = new TableLayoutPanel
+        _bannerCard.Radius = 10f;
+        _bannerCard.BorderColor = Color.FromArgb(244, 208, 213);
+        _bannerCard.BackColor = Color.FromArgb(253, 243, 244);
+        _bannerCard.Padding = new Padding(12, 9, 12, 9);
+        _bannerCard.AutoSize = true;
+        _bannerCard.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        _bannerCard.Margin = new Padding(0, 0, 0, 10);
+        _bannerCard.Controls.Add(_banner);
+        _bannerCard.Visible = false;
+
+        // The three actions: a full-width primary and two secondaries in a card.
+        var actions = new Card
+        {
+            Radius = 10f,
+            BackColor = Theme.Raised,
+            Padding = new Padding(8),
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, 0, 0, 10),
+        };
+        var actionsTable = new TableLayoutPanel
         {
             ColumnCount = 2,
             RowCount = 1,
             Dock = DockStyle.Fill,
-            Margin = new Padding(0, 10, 0, 0),
+            Margin = new Padding(0),
         };
-        actions.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        actions.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        _installButton.Margin = new Padding(0, 0, 6, 0);
-        _screenshotButton.Margin = new Padding(6, 0, 0, 0);
-        actions.Controls.Add(_installButton, 0, 0);
-        actions.Controls.Add(_screenshotButton, 1, 0);
+        actionsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        actionsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        _installButton.Margin = new Padding(0, 0, 4, 0);
+        _screenshotButton.Margin = new Padding(4, 0, 0, 0);
+        actionsTable.Controls.Add(_installButton, 0, 0);
+        actionsTable.Controls.Add(_screenshotButton, 1, 0);
+        actions.Controls.Add(actionsTable);
 
-        var logsHeader = new TableLayoutPanel
+        // Log card with a header row and the terminal below.
+        var logCard = new Card
+        {
+            Radius = 14f,
+            BackColor = Theme.Raised,
+            BorderColor = Theme.Border,
+            Padding = new Padding(14, 10, 14, 12),
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0, 0, 0, 10),
+        };
+
+        var logUrl = new TableLayoutPanel
         {
             ColumnCount = 2,
             Dock = DockStyle.Fill,
             AutoSize = true,
             AutoSizeMode = AutoSizeMode.GrowAndShrink,
-            Margin = new Padding(0, 16, 0, 4),
+            Margin = new Padding(0, 2, 0, 8),
         };
-        logsHeader.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        logsHeader.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        logUrl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        logUrl.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
         var logsLabel = new Label
         {
             Text = "Logs",
-            Font = new Font("Segoe UI Semibold", 9.75f, FontStyle.Bold),
+            Font = Theme.Section,
             ForeColor = Theme.Text,
             AutoSize = true,
             Margin = new Padding(0, 4, 0, 0),
@@ -182,14 +270,21 @@ internal sealed class MainForm : Form
 
         _logcatToggle.Text = "Device logcat";
         _logcatToggle.Font = Theme.Small;
-        _logcatToggle.ForeColor = Theme.Muted;
+        _logcatToggle.ForeColor = Theme.Subtle;
         _logcatToggle.AutoSize = true;
-        _logcatToggle.Margin = new Padding(0, 4, 0, 0);
+        _logcatToggle.Margin = new Padding(0, 6, 0, 0);
         _logcatToggle.Enabled = false;
 
-        logsHeader.Controls.Add(logsLabel, 0, 0);
-        logsHeader.Controls.Add(_logcatToggle, 1, 0);
+        logUrl.Controls.Add(logsLabel, 0, 0);
+        logUrl.Controls.Add(_logcatToggle, 1, 0);
 
+        var logHost = new Panel
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(6),
+            BackColor = Theme.LogBackground,
+            Margin = new Padding(0),
+        };
         _log.ReadOnly = true;
         _log.BorderStyle = BorderStyle.None;
         _log.BackColor = Theme.LogBackground;
@@ -200,18 +295,23 @@ internal sealed class MainForm : Form
         _log.WordWrap = false;
         _log.ScrollBars = RichTextBoxScrollBars.Both;
         _log.DetectUrls = false;
-
-        var logHost = new Panel
-        {
-            Dock = DockStyle.Fill,
-            Padding = new Padding(8),
-            BackColor = Theme.LogBackground,
-            Margin = new Padding(0, 0, 0, 10),
-        };
         logHost.Controls.Add(_log);
-        logHost.Paint += (_, e) => ControlPaint.DrawBorder(
-            e.Graphics, logHost.ClientRectangle, Theme.Border, ButtonBorderStyle.Solid);
 
+        var logBody = new TableLayoutPanel
+        {
+            ColumnCount = 1,
+            Dock = DockStyle.Fill,
+            Margin = new Padding(0),
+        };
+        logBody.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        logBody.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        logBody.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        logBody.Controls.Add(logUrl, 0, 0);
+        logBody.Controls.Add(logHost, 0, 1);
+
+        logCard.Controls.Add(logBody);
+
+        // Footer: small product line + log file link.
         var footer = new TableLayoutPanel
         {
             ColumnCount = 2,
@@ -227,7 +327,7 @@ internal sealed class MainForm : Form
         {
             Text = AppInfo.Title,
             Font = Theme.Small,
-            ForeColor = Theme.Muted,
+            ForeColor = Theme.Subtle,
             AutoSize = true,
             Margin = new Padding(0),
         };
@@ -237,7 +337,7 @@ internal sealed class MainForm : Form
             Text = "Log file",
             Font = Theme.Small,
             AutoSize = true,
-            LinkColor = Theme.Muted,
+            LinkColor = Theme.Subtle,
             ActiveLinkColor = Theme.Accent,
             Margin = new Padding(0),
         };
@@ -248,16 +348,14 @@ internal sealed class MainForm : Form
 
         // Every row sizes itself, so nothing clips on high-DPI screens and
         // hidden rows (the device picker, the warning banner) take no space.
-        AddRow(root, title, SizeType.AutoSize);
+        AddRow(root, header, SizeType.AutoSize);
         AddRow(root, statusRow, SizeType.AutoSize);
-        AddRow(root, _deviceName, SizeType.AutoSize);
-        AddRow(root, _deviceVersion, SizeType.AutoSize);
+        AddRow(root, _deviceCard, SizeType.AutoSize);
         AddRow(root, _deviceSelector, SizeType.AutoSize);
-        AddRow(root, _banner, SizeType.AutoSize);
+        AddRow(root, _bannerCard, SizeType.AutoSize);
         AddRow(root, _mirrorButton, SizeType.AutoSize);
         AddRow(root, actions, SizeType.AutoSize);
-        AddRow(root, logsHeader, SizeType.AutoSize);
-        AddRow(root, logHost, SizeType.Percent, 100);
+        AddRow(root, logCard, SizeType.Percent, 100);
         AddRow(root, footer, SizeType.AutoSize);
 
         root.RowCount = root.RowStyles.Count;
@@ -271,13 +369,12 @@ internal sealed class MainForm : Form
     /// </summary>
     private void ApplyScaling()
     {
-        var height = Scaled(40);
-        _mirrorButton.Height = Scaled(44);
-        _installButton.Height = height;
-        _screenshotButton.Height = height;
+        _mirrorButton.Height = Scaled(50);
+        _installButton.Height = Scaled(40);
+        _screenshotButton.Height = Scaled(40);
 
         if (_actions is not null)
-            _actions.Height = height;
+            _actions.Height = Scaled(40) + Scaled(16);
     }
 
     private int Scaled(int value) => (int)Math.Round(value * DeviceDpi / 96.0);
@@ -292,6 +389,31 @@ internal sealed class MainForm : Form
     {
         table.RowStyles.Add(new RowStyle(type, size));
         table.Controls.Add(control, 0, table.RowStyles.Count - 1);
+    }
+
+    private static void DrawPhone(object? sender, PaintEventArgs e)
+    {
+        if (sender is not Panel p)
+            return;
+
+        var g = e.Graphics;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+
+        var circle = new Rectangle(2, 2, p.Width - 4, p.Height - 4);
+        using (var bg = new SolidBrush(Color.FromArgb(238, 240, 246)))
+            g.FillEllipse(bg, circle);
+
+        var w = 15;
+        var h = 23;
+        var x = p.Width / 2 - w / 2;
+        var y = p.Height / 2 - h / 2;
+
+        using (var pen = new Pen(Theme.Accent, 1.6f))
+        {
+            using var path = Rounded.Path(new Rectangle(x, y, w, h), 3f);
+            g.DrawPath(pen, path);
+            g.DrawLine(pen, x + 3, y + 3, x + w - 3, y + 3);
+        }
     }
 
     private static Icon? LoadIcon()
@@ -313,9 +435,9 @@ internal sealed class MainForm : Form
     {
         await StopMonitorAsync().ConfigureAwait(true);
 
-        SetStatus("○", "Checking...", Theme.Muted);
+        SetStatus(Theme.Muted, "Checking...");
         _recheck.Visible = false;
-        _banner.Visible = false;
+        _bannerCard.Visible = false;
 
         var core = await Task.Run(() => PhoneDebugContext.Create()).ConfigureAwait(true);
         core = await EnsureToolsAsync(core).ConfigureAwait(true);
@@ -357,7 +479,7 @@ internal sealed class MainForm : Form
             : needAdb ? "adb"
             : "scrcpy";
 
-        SetStatus("○", "Downloading tools...", Theme.Accent);
+        SetStatus(Theme.Accent, "Downloading tools...");
         Append($"Phone Debug is ready to go, but {what} is missing. Downloading it now...");
 
         var progress = new Progress<string>(message => RunOnUi(() => Append(message, raw: true)));
@@ -374,12 +496,12 @@ internal sealed class MainForm : Form
 
     private void ShowToolProblem(ToolStatus tool, bool fatal = true)
     {
-        SetStatus("×", $"{tool.Name} not found", Theme.Danger);
+        SetStatus(Theme.Danger, $"{tool.Name} not found");
 
         _banner.Text = string.Join(
             Environment.NewLine,
             ToolEnvironment.HowToInstall(tool.Name).Where(l => l.Length > 0).Take(2));
-        _banner.Visible = true;
+        _bannerCard.Visible = true;
         _recheck.Visible = true;
 
         Append($"{tool.Name} not found.");
@@ -401,7 +523,7 @@ internal sealed class MainForm : Form
         switch (e.State)
         {
             case DeviceMonitorState.Connected when e.Device is not null:
-                SetStatus("●", "Connected", Theme.Connected);
+                SetStatus(Theme.Connected, "Connected");
                 _deviceName.Text = e.Device.Name;
                 _deviceName.ForeColor = Theme.Text;
                 _deviceName.Font = Theme.DeviceName;
@@ -410,31 +532,31 @@ internal sealed class MainForm : Form
                 break;
 
             case DeviceMonitorState.Unauthorized:
-                SetStatus("○", "Not authorized", Theme.Danger);
+                SetStatus(Theme.Danger, "Not authorized");
                 SetHint("Unlock your phone and accept \"Allow USB debugging\".");
                 StopMirror();
                 Append("Device detected but not authorized.");
                 break;
 
             case DeviceMonitorState.Offline:
-                SetStatus("○", "Device offline", Theme.Danger);
+                SetStatus(Theme.Danger, "Device offline");
                 SetHint("Unplug and reconnect the cable.");
                 StopMirror();
                 break;
 
             case DeviceMonitorState.MultipleDevices:
-                SetStatus("●", "Several devices", Theme.Accent);
+                SetStatus(Theme.Accent, "Several devices");
                 SetHint("Choose which phone to use.");
                 break;
 
             case DeviceMonitorState.AdbError:
-                SetStatus("×", "ADB error", Theme.Danger);
+                SetStatus(Theme.Danger, "ADB error");
                 SetHint("ADB is not responding. Retrying...");
                 Append($"ADB error: {e.Detail}");
                 break;
 
             default:
-                SetStatus("○", "No device", Theme.Muted);
+                SetStatus(Theme.Muted, "No device");
                 SetHint("Waiting for Android device...");
                 StopMirror();
                 break;
@@ -688,24 +810,21 @@ internal sealed class MainForm : Form
             Append(step, raw: true);
 
         _banner.Text = problem.Summary;
-        _banner.ForeColor = Theme.Danger;
-        _banner.Visible = true;
+        _bannerCard.Visible = true;
     }
 
     // ---------------------------------------------------------------- helpers
 
-    private void SetStatus(string dot, string text, Color color)
+    private void SetStatus(Color color, string text)
     {
-        _statusDot.Text = dot;
-        _statusDot.ForeColor = color;
-        _statusText.Text = text;
-        _statusText.ForeColor = color == Theme.Muted ? Theme.Muted : Theme.Text;
+        _statusChip.DotColor = color;
+        _statusChip.Text = text;
     }
 
     private void SetHint(string hint)
     {
         _deviceName.Text = hint;
-        _deviceName.ForeColor = Theme.Muted;
+        _deviceName.ForeColor = Theme.Subtle;
         _deviceName.Font = Theme.Body;
         _deviceVersion.Text = "";
     }
@@ -728,7 +847,6 @@ internal sealed class MainForm : Form
             : "Open Screen";
 
         _mirrorButton.Enabled = !_busy && (connected ? _core?.Scrcpy is not null : canConnect);
-        _mirrorButton.BackColor = _mirrorButton.Enabled ? Theme.Accent : Color.FromArgb(191, 210, 250);
 
         _installButton.Enabled = connected && !_busy;
         _screenshotButton.Enabled = connected && !_busy;

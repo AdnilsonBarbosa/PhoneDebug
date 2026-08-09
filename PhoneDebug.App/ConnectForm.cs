@@ -321,7 +321,7 @@ internal sealed class ConnectForm : Form
     private static Label Heading(string text) => new()
     {
         Text = text,
-        Font = new Font("Segoe UI Semibold", 10f, FontStyle.Bold),
+        Font = Theme.Section,
         ForeColor = Theme.Text,
         AutoSize = true,
         Margin = new Padding(0, 0, 0, 6),
@@ -330,7 +330,7 @@ internal sealed class ConnectForm : Form
     private static Label Body(string text) => new()
     {
         Text = text,
-        ForeColor = Theme.Muted,
+        ForeColor = Theme.Subtle,
         AutoSize = true,
         Margin = new Padding(0, 0, 0, 10),
     };
