@@ -2,7 +2,7 @@
 
   <!-- Single source of truth for the product version. -->
   <PropertyGroup>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Product>Phone Debug</Product>
     <Authors>Adnilson Barbosa</Authors>
     <Company>Phone Debug</Company>
