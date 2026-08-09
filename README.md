@@ -45,7 +45,7 @@ phone-debug
 ```
 
 ```text
-Phone Debug 0.1.0
+Phone Debug 0.2.0
 
 ✓ ADB found
 ✓ scrcpy found
