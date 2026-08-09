@@ -29,11 +29,16 @@ jobs:
         shell: pwsh
         run: |
           $zip = Get-ChildItem ./dist -Filter *.zip | Select-Object -First 1
+          $dir = Get-ChildItem ./dist -Directory | Select-Object -First 1
           "zip=$($zip.FullName)" >> $env:GITHUB_OUTPUT
+          "cli=$($dir.FullName)\phone-debug.exe" >> $env:GITHUB_OUTPUT
+          "app=$($dir.FullName)\PhoneDebug.exe" >> $env:GITHUB_OUTPUT
 
       - name: Attach to release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             ${{ steps.package.outputs.zip }}
+            ${{ steps.package.outputs.cli }}
+            ${{ steps.package.outputs.app }}
           generate_release_notes: true

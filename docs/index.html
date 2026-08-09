@@ -56,9 +56,15 @@
   with your mouse and keyboard - no typing on the phone, no cable juggling.</p>
 
   <div class="row">
-    <a class="btn btn-primary" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest">Download for Windows</a>
+    <a class="btn btn-primary" id="dl-btn" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest">Download for Windows</a>
     <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases">All releases</a>
     <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug">Source code</a>
+  </div>
+  <div class="row">
+    <p style="margin:0.5rem 0 0;color:#9aa4b2;font-size:.92rem">
+      or grab just the console tool:
+      <a style="color:#8ab4f8" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest/download/phone-debug.exe">phone-debug.exe</a>
+    </p>
   </div>
 
   <div class="row">
@@ -108,5 +114,20 @@
   MIT licensed · built with .NET · on GitHub ·
   <a href="https://github.com/AdnilsonBarbosa/PhoneDebug">AdnilsonBarbosa/PhoneDebug</a>
 </footer>
+
+<script>
+  (async () => {
+    try {
+      const res = await fetch("https://api.github.com/repos/AdnilsonBarbosa/PhoneDebug/releases/latest");
+      const rel = await res.json();
+      const zip = (rel.assets || []).find(a => /\.zip$/i.test(a.name) && /win-x64/i.test(a.name));
+      const btn = document.getElementById("dl-btn");
+      if (zip && btn) {
+        btn.href = zip.browser_download_url;
+        btn.textContent = "Download for Windows v" + String(rel.tag_name).replace(/^v/, "");
+      }
+    } catch (e) { /* keep the default link to the releases page */ }
+  })();
+</script>
 </body>
 </html>
