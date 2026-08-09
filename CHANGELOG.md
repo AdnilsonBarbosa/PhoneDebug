@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Releases are signed with GitHub build provenance - verify with
+  `gh attestation verify`
+- The installer starts the Windows app when it finishes
+- The website carries a stricter Content-Security-Policy
+- SECURITY.md and Dependabot are now included
+
 ## 0.2.0
 
 - Full solution restructure: shared Core, CLI and a Windows desktop app

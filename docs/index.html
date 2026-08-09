@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Phone Debug - Mirror and control an Android phone from your PC</title>
 <meta name="description" content="Phone Debug mirrors an Android phone on your Windows PC. Plug in or pair over Wi-Fi, and control the phone with mouse and keyboard. Both a CLI and a Windows app.">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' https://img.shields.io; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -56,13 +58,13 @@
   with your mouse and keyboard - no typing on the phone, no cable juggling.</p>
 
   <div class="row">
-    <a class="btn btn-primary" id="dl-btn" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest">Download for Windows</a>
-    <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases">All releases</a>
+    <a class="btn btn-primary" id="dl-btn" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest">Download the Windows app</a>
+    <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest/download/PhoneDebug.exe">app only (PhoneDebug.exe)</a>
     <a class="btn btn-secondary" href="https://github.com/AdnilsonBarbosa/PhoneDebug">Source code</a>
   </div>
   <div class="row">
     <p style="margin:0.5rem 0 0;color:#9aa4b2;font-size:.92rem">
-      or grab just the console tool:
+      developers who prefer the terminal:
       <a style="color:#8ab4f8" href="https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest/download/phone-debug.exe">phone-debug.exe</a>
     </p>
   </div>
@@ -81,10 +83,9 @@
   <h2>Install</h2>
   <ol>
     <li>Download the <b>release zip</b> from the button above and unzip it.</li>
-    <li>Run <code>install.ps1</code></li>
-    <li>Reopen the terminal and run
-      <div class="code">phone-debug</div>
-    </li>
+    <li>Run <code>install.ps1</code> - it installs adb and scrcpy for you.</li>
+    <li>The <b>Phone Debug</b> app opens by itself. Plug in your phone and it
+      mirrors the screen.</li>
   </ol>
 
   <h2>How it works</h2>
@@ -124,7 +125,7 @@
       const btn = document.getElementById("dl-btn");
       if (zip && btn) {
         btn.href = zip.browser_download_url;
-        btn.textContent = "Download for Windows v" + String(rel.tag_name).replace(/^v/, "");
+        btn.textContent = "Download the Windows app v" + String(rel.tag_name).replace(/^v/, "");
       }
     } catch (e) { /* keep the default link to the releases page */ }
   })();

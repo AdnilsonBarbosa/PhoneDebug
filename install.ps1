@@ -21,7 +21,8 @@
 param(
     [switch]$NoShortcut,
     [switch]$NoPath,
-    [switch]$SkipDependencyCheck
+    [switch]$SkipDependencyCheck,
+    [switch]$NoLaunch
 )
 
 $ErrorActionPreference = "Stop"
@@ -209,8 +210,22 @@ if (-not $SkipDependencyCheck) {
 Write-Host ""
 Write-Host "Installed." -ForegroundColor Green
 Write-Host ""
-Write-Host "  Open a NEW terminal and run:  phone-debug" -ForegroundColor White
-Write-Host "  Or start 'Phone Debug' from the Start Menu for the window." -ForegroundColor White
+
+if ($NoLaunch) {
+    Write-Host "  The app is in your Start Menu: 'Phone Debug'" -ForegroundColor White
+    Write-Host "  Or run  phone-debug  in a terminal (CLI)." -ForegroundColor White
+}
+else {
+    $app = Join-Path $binDir "PhoneDebug.exe"
+    if (Test-Path $app) {
+        Write-Host "  Starting Phone Debug..." -ForegroundColor White
+        Start-Process $app
+    }
+    else {
+        Write-Host "  Start 'Phone Debug' from the Start Menu." -ForegroundColor White
+    }
+}
+
 Write-Host ""
 Write-Host "  Uninstall with:  powershell -ExecutionPolicy Bypass -File `"$binDir\uninstall.ps1`"" -ForegroundColor DarkGray
 Write-Host ""

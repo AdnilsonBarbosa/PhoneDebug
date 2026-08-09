@@ -65,7 +65,7 @@ phone-debug
 ```
 
 ```text
-Phone Debug 0.2.0
+Phone Debug 0.3.0
 
 ✓ ADB found
 ✓ scrcpy found
@@ -156,6 +156,24 @@ screen as the command line.
 Portable setup: drop `adb.exe` and `scrcpy.exe` into the `tools` folder next to
 the executables and they are used instead of the installed ones - see
 [tools/README.md](tools/README.md).
+
+## Security
+
+- Only give USB debugging to computers and cables you trust - it grants full
+  control of the phone. Don't plug a debugging-enabled phone into unknown
+  public chargers.
+- Wi-Fi pairing only works between devices on the same local network.
+- The app never requests administrator rights; installation is per-user.
+- Every release artefact carries **GitHub build provenance**. Verify a
+  download before opening it:
+
+  ```powershell
+  gh attestation verify .\phone-debug.exe --owner AdnilsonBarbosa
+  ```
+
+  On Windows 11 (24H2+) SmartScreen can use this same attestation to show the
+  file came from this repository.
+  See [SECURITY.md](SECURITY.md) for details and how to report a problem.
 
 ## Build from source
 
