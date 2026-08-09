@@ -39,9 +39,9 @@ jobs:
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
-            ${{ steps.package.outputs.zip }}
-            ${{ steps.package.outputs.cli }}
-            ${{ steps.package.outputs.app }}
+            dist/**/*.zip
+            dist/**/phone-debug.exe
+            dist/**/PhoneDebug.exe
 
       - name: Attach to release
         uses: softprops/action-gh-release@v2
