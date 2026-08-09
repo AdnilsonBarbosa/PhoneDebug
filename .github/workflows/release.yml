@@ -20,21 +20,20 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
-      - name: Publish (self-contained, single file)
+      - name: Build release package
         shell: pwsh
-        run: |
-          dotnet publish "./PhoneDebug.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -o "./publish"
+        run: ./build-release.ps1
 
-      - name: Create zip
+      - name: Collect artefacts
+        id: package
         shell: pwsh
         run: |
-          Compress-Archive -Path "./publish/phone-debug.exe" -DestinationPath "./publish/phone-debug.zip" -Force
+          $zip = Get-ChildItem ./dist -Filter *.zip | Select-Object -First 1
+          "zip=$($zip.FullName)" >> $env:GITHUB_OUTPUT
 
       - name: Attach to release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./publish/phone-debug.zip
-            ./publish/phone-debug.exe
-            ./install.ps1
+            ${{ steps.package.outputs.zip }}
           generate_release_notes: true

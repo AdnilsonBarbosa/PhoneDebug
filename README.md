@@ -1,166 +1,161 @@
-# Phone Debug Terminal
+# Phone Debug
 
-Ferramenta de linha de comandos (CLI) para Windows para depurar um telemóvel
-Android via USB. Executar `phone-debug` e ele trata do resto.
+Plug in an Android phone and see it on your PC. `phone-debug` waits for a
+device, tells you what it found and opens the screen - no flags, no setup.
 
-## Instalação (uma linha, para qualquer utilizador)
+Same engine, two front ends: a command line and a small Windows app.
 
-```powershell
-irm https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest/download/install.ps1 | iex
-```
+![Phone Debug](assets/screenshot.png)
 
-O instalador transfere o executável da **última release** do GitHub, põe
-`phone-debug` no PATH e instala `adb` e `scrcpy` automaticamente (se faltarem).
+## Requirements
 
-Depois, num terminal **novo**:
+- Windows 10 or 11 (x64)
+- [adb](https://developer.android.com/tools/releases/platform-tools) and
+  [scrcpy](https://github.com/Genymobile/scrcpy) - the installer sets both up for you
+- A phone with **USB debugging** enabled
+  (Settings > About phone > tap *Build number* 7 times, then
+  Settings > System > Developer options > USB debugging)
 
-```powershell
-phone-debug
-```
+Releases carry their own .NET runtime, so nothing else is needed.
 
-## Requisitos (para compilar / publicar)
+## Install
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download)
-- [Android platform-tools](https://dl.google.com/android/repository/platform-tools-latest-windows.zip) -> `adb.exe` no PATH
-- [scrcpy](https://github.com/Genymobile/scrcpy) -> `scrcpy` no PATH
-
-Instalar o scrcpy:
+Download the release zip, unpack it, and run:
 
 ```powershell
-winget install Genymobile.scrcpy
-# ou
-scoop install scrcpy
-# ou
-choco install scrcpy --yes
+powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-Depois de instalar, **reabra** o terminal.
+That copies Phone Debug to `%LOCALAPPDATA%\PhoneDebug\bin`, puts it on your
+PATH, adds a Start Menu entry and installs adb and scrcpy through winget if
+they are missing. No administrator rights, nothing changed system-wide.
 
-## Instalação (comando `phone-debug` em qualquer diretório)
+To remove it:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1
+powershell -ExecutionPolicy Bypass -File uninstall.ps1
 ```
 
-Publica um executável standalone (`phone-debug.exe`) em
-`%LOCALAPPDATA%\PhoneDebug\bin`, adiciona essa pasta ao PATH do utilizador e
-fica disponível como `phone-debug`.
+## First run
 
-Para incluir o .NET runtime dentro do exe (sem necessidade de ter o .NET
-instalado no alvo):
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -SelfContained
-```
-
-Abra um **novo** terminal e:
+Open a **new** terminal:
 
 ```powershell
 phone-debug
 ```
-
-## Comandos
-
-| Comando | Descrição |
-| --- | --- |
-| `phone-debug` | vigia o telemóvel: espera o dispositivo, mostra modelo/Android/serial e abre o ecrã automaticamente (e novamente a cada nova ligação) |
-| `phone-debug devices` | lista os dispositivos ligados |
-| `phone-debug mirror` | abre o scrcpy diretamente |
-| `phone-debug logs` | executa `adb logcat` (streaming, `Ctrl+C` para parar) |
-| `phone-debug info` | detalhes do dispositivo (modelo, fabricante, Android, SDK, patch) |
-| `phone-debug screenshot` | captura o ecrã para `screenshots/screenshot-<data-hora>.png` |
-| `phone-debug install <apk>` | instala com `adb install -r <apk>` |
-| `phone-debug reboot` | reinicia o dispositivo |
-
-### Exemplo: `phone-debug` (sem argumentos)
 
 ```text
-PHONE DEBUG
+Phone Debug 0.1.0
 
-Checking ADB...
-ADB: OK
-
-Checking scrcpy...
-scrcpy: OK
+✓ ADB found
+✓ scrcpy found
 
 Waiting for Android device...
 
-Device connected
-  Model:   2312FPCA6G
-  Android: 16
-  Serial:  adb-dym7am4luca649yh-op4RB1._adb-tls-connect._tcp
+✓ Samsung Galaxy S24 connected
+  Android 15
 
-Opening screen...
+Starting mirror...
 ```
 
-- Ao desligar o telemóvel, volta ao estado de espera.
-- Se o estado for `unauthorized`, informa um pedido de autorização no telemóvel.
-- Se houver vários dispositivos autorizados, pergunta qual usar.
-- Nunca abre duas instâncias do scrcpy ao mesmo tempo para o mesmo dispositivo.
+Unplug the phone and it goes back to waiting. Plug it in again and the screen
+reopens. If the phone has not been trusted yet, you are told to unlock it and
+accept **Allow USB debugging**.
 
-## Publicar a tua própria release (como o Claude Code)
-
-1. Cria um repositório público no GitHub chamado `phone-debug` e executa:
+## No phone connected?
 
 ```powershell
-git init
-git add .
-git commit -m "Inicial"
-git branch -M main
-git remote add origin https://github.com/AdnilsonBarbosa/PhoneDebug.git
-git push -u origin main
-git tag v0.1.0
-git push origin v0.1.0
+phone-debug connect
 ```
 
-2. Edita `install.ps1` e substitui `<SEU-UTILIZADOR>` pelo teu utilizador GitHub **antes** do primeiro `git push` (senão o instalador não sabe de onde descarregar).
-
-3. O GitHub Action `.github/workflows/release.yml` compila automaticamente
-   (`phone-debug.exe` self-contained), faz um zip e anexa tudo a essa release.
-
-4. A partir daí, uma linha instala em qualquer PC Windows:
+It walks you through it: the USB steps, or wireless debugging over Wi-Fi. For
+Wi-Fi it prints a QR code in the terminal that you scan with the phone
+(Developer options > Wireless debugging > *Pair device with QR code*) and pairs
+by itself. The Windows app has the same thing behind **Connect a phone**.
 
 ```powershell
-irm https://github.com/AdnilsonBarbosa/PhoneDebug/releases/latest/download/install.ps1 | iex
+phone-debug connect qr                       # straight to the QR code
+phone-debug connect usb                      # USB steps, then wait
+phone-debug pair 192.168.0.10:37123 123456   # code shown by the phone
+phone-debug connect 192.168.0.10:5555        # already paired, just connect
 ```
 
-### Compilar manualmente
+Both devices have to be on the same Wi-Fi network.
 
-```powershell
-dotnet publish PhoneDebug.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish
-```
-
-ou via o instalador local (adiciona ao PATH):
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\install.ps1
-```
-
-## Estrutura
+## Command line
 
 ```text
-PhoneDebug/
-├── PhoneDebug.csproj
-├── Program.cs
-├── Commands/
-│   ├── DevicePicker.cs
-│   ├── DevicesCommand.cs
-│   ├── MirrorCommand.cs
-│   ├── LogsCommand.cs
-│   ├── InstallCommand.cs
-│   ├── ScreenshotCommand.cs
-│   ├── InfoCommand.cs
-│   └── RebootCommand.cs
-├── Services/
-│   ├── AdbService.cs
-│   ├── ScrcpyService.cs
-│   └── DeviceWatcher.cs
-├── Models/
-│   └── AndroidDevice.cs
-├── .github/workflows/
-│   └── release.yml
-├── install.ps1          (distribuição web)
-├── scripts/
-│   └── install.ps1      (compilar local)
-└── README.md
+phone-debug                    Wait for a device and open the screen
+phone-debug connect            Connect a phone (USB steps, or Wi-Fi QR code)
+phone-debug mirror             Mirror and control the device
+phone-debug devices            List connected devices
+phone-debug info               Show device information
+phone-debug install app.apk    Install an APK
+phone-debug logs               Stream the Android log
+phone-debug screenshot [path]  Capture the screen
+phone-debug reboot             Reboot the device
+phone-debug --help
+phone-debug --version
 ```
+
+Examples:
+
+```powershell
+phone-debug install "C:\my builds\demo.apk"
+phone-debug screenshot "D:\captures\before.png"
+phone-debug logs | Select-String "MyApp"
+```
+
+Screenshots default to `Pictures\Phone Debug`.
+
+## Windows app
+
+Start **Phone Debug** from the Start Menu, or run `PhoneDebug.exe`.
+
+It shows whether a phone is connected, which one, and gives you *Open Screen*,
+*Install APK* and *Screenshot*, with a log panel underneath. It follows the
+phone by itself - connect or disconnect and the window updates. With no phone
+attached, the button becomes **Connect a phone** and opens the same QR pairing
+screen as the command line.
+
+## Troubleshooting
+
+| What you see | What to do |
+| --- | --- |
+| `ADB not found` / `scrcpy not found` | Rerun `install.ps1`, or `winget install Google.PlatformTools Genymobile.scrcpy`, then open a new terminal |
+| `Android device detected` but nothing happens | Unlock the phone and accept **Allow USB debugging** |
+| `The device is offline` | Unplug and reconnect, or toggle USB debugging off and on |
+| `phone-debug` is not recognised | Open a *new* terminal - PATH changes do not reach open ones |
+| **The screen shows but the mouse does nothing** | Some phones (Xiaomi, POCO, Redmi) block injected input. Phone Debug notices and reopens the mirror as an emulated USB keyboard and mouse, which they do accept. If it still will not respond, turn on **USB debugging (Security settings)** in Developer options (needs a Mi account and a SIM card) and reboot the phone |
+| **The mouse is stuck inside the mirror window** | That is emulated input mode - press **left Alt** (or the left Windows key) to give the cursor back. `phone-debug --standard` goes back to normal input |
+| **The picture stutters** | Over Wi-Fi the whole screen travels across the network. Use a USB cable, or `phone-debug --light` for a smaller, smoother stream |
+| Mirroring opens then closes | Reconnect the phone; if it keeps happening, check the log file |
+| Nothing connects at all | `phone-debug connect` - it walks through USB and Wi-Fi setup |
+| Anything else | `%LOCALAPPDATA%\PhoneDebug\logs\phone-debug.log` has the technical detail |
+
+Portable setup: drop `adb.exe` and `scrcpy.exe` into the `tools` folder next to
+the executables and they are used instead of the installed ones - see
+[tools/README.md](tools/README.md).
+
+## Build from source
+
+```powershell
+dotnet test
+.\build-release.ps1
+```
+
+The package lands in `dist\PhoneDebug-v<version>-win-x64\`.
+
+```text
+PhoneDebug.Core/   ADB, scrcpy, device detection - all the logic
+PhoneDebug.Cli/    phone-debug.exe
+PhoneDebug.App/    PhoneDebug.exe (WinForms)
+PhoneDebug.Tests/  xunit tests for the core
+```
+
+The version lives in one place, `Directory.Build.props`.
+
+## Licence
+
+MIT - see [LICENSE](LICENSE). adb and scrcpy are separate projects with their
+own licences; see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

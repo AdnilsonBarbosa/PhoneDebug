@@ -1,0 +1,22 @@
+<Project>
+
+  <!-- Single source of truth for the product version. -->
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Product>Phone Debug</Product>
+    <Authors>Adnilson Barbosa</Authors>
+    <Company>Phone Debug</Company>
+    <Copyright>Copyright (c) 2026 Adnilson Barbosa</Copyright>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+</Project>

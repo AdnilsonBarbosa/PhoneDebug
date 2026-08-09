@@ -1,5 +1,8 @@
 bin/
 obj/
+dist/
 publish/
 screenshots/
+TestResults/
+.vs/
 *.user

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>PhoneDebug.Core</RootNamespace>
+    <AssemblyName>PhoneDebug.Core</AssemblyName>
+    <Description>Shared ADB / scrcpy engine used by the Phone Debug CLI and GUI.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PhoneDebug.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+  </ItemGroup>
+
+</Project>

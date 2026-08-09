@@ -1,137 +1,216 @@
 <#
-  phone-debug  -  distribuição web (uma linha)
-  -------------------------------------------------
-  ANTES DE PUBLICAR: substitui <SEU-UTILIZADOR> abaixo pelo teu utilizador GitHub,
-  ou passa '-Repo <utilizador>/phone-debug' quando correres o script diretamente.
+.SYNOPSIS
+    Installs Phone Debug for the current user.
 
-  Instalação:
-      irm https://github.com/<utilizador>/phone-debug/releases/latest/download/install.ps1 | iex
+.DESCRIPTION
+    Run this from a release folder (next to PhoneDebug.exe and phone-debug.exe)
+    or from a clone of the repository - it detects which and does the right thing.
 
-  Desinstalar:
-      Volta a descarregar este script e corre:
-      & "$env:TEMP\phone-debug-install.ps1" -Uninstall
+    It copies the program to %LOCALAPPDATA%\PhoneDebug\bin, puts that folder on
+    your PATH so "phone-debug" works from anywhere, adds a Start Menu shortcut,
+    and checks that adb and scrcpy are available.
+
+    Nothing is installed system-wide and no administrator rights are needed.
+
+.EXAMPLE
+    powershell -ExecutionPolicy Bypass -File install.ps1
+
+.EXAMPLE
+    powershell -ExecutionPolicy Bypass -File install.ps1 -NoShortcut
 #>
 param(
-    [switch]$Uninstall,
-    [string]$Repo = "AdnilsonBarbosa/PhoneDebug"
+    [switch]$NoShortcut,
+    [switch]$NoPath,
+    [switch]$SkipDependencyCheck
 )
 
 $ErrorActionPreference = "Stop"
 
 $installDir = Join-Path $env:LOCALAPPDATA "PhoneDebug"
-$binDir     = Join-Path $installDir "bin"
-$exe        = Join-Path $binDir "phone-debug.exe"
+$binDir = Join-Path $installDir "bin"
+$source = $PSScriptRoot
 
-function Write-Info($m)  { Write-Host $m -ForegroundColor Cyan }
-function Write-Fail($m)  { Write-Host $m -ForegroundColor Red }
+function Write-Title($text) { Write-Host "`n$text" -ForegroundColor Cyan }
+function Write-Ok($text) { Write-Host "  $([char]0x2713) $text" -ForegroundColor Green }
+function Write-Warn($text) { Write-Host "  ! $text" -ForegroundColor Yellow }
+function Write-Fail($text) { Write-Host "  x $text" -ForegroundColor Red }
 
-function Get-UserPath {
-    $p = [Environment]::GetEnvironmentVariable("PATH", "User")
-    if (-not $p) { $p = "" }
-    return $p
+function Test-Tool([string]$Name) {
+    if (Get-Command $Name -ErrorAction SilentlyContinue) { return $true }
+    return (Test-Path (Join-Path $binDir "tools\$Name.exe"))
 }
 
-function Add-ToUserPath([string]$Dir) {
-    $current = Get-UserPath
-    if (($current -split ";") -notcontains $Dir) {
-        $joined = if ($current) { "$current;$Dir" } else { $Dir }
+Write-Host ""
+Write-Host "Phone Debug - install" -ForegroundColor White
+Write-Host "----------------------------------------"
+
+# ---------------------------------------------------------------- 1. source
+
+$hasBinaries = (Test-Path (Join-Path $source "phone-debug.exe")) -and (Test-Path (Join-Path $source "PhoneDebug.exe"))
+$hasSources = Test-Path (Join-Path $source "PhoneDebug.sln")
+
+if (-not $hasBinaries -and $hasSources) {
+    Write-Title "Building from source"
+
+    if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
+        Write-Fail "The .NET SDK is required to build from source: https://dotnet.microsoft.com/download"
+        exit 1
+    }
+
+    & (Join-Path $source "build-release.ps1") -NoZip
+    if ($LASTEXITCODE -ne 0) { exit 1 }
+
+    $built = Get-ChildItem (Join-Path $source "dist") -Directory |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+
+    if (-not $built) {
+        Write-Fail "The build did not produce a package."
+        exit 1
+    }
+
+    $source = $built.FullName
+    Write-Ok "built $($built.Name)"
+}
+elseif (-not $hasBinaries) {
+    Write-Fail "PhoneDebug.exe and phone-debug.exe were not found next to this script."
+    Write-Host "    Run install.ps1 from an unpacked release folder, or from the project source." -ForegroundColor DarkGray
+    exit 1
+}
+
+# ---------------------------------------------------------------- 2. copy
+
+Write-Title "Installing to $binDir"
+
+if ((Resolve-Path $source).Path -eq (Resolve-Path -Path $binDir -ErrorAction SilentlyContinue).Path) {
+    Write-Ok "already in place"
+}
+else {
+    $running = Get-Process -Name "PhoneDebug", "phone-debug" -ErrorAction SilentlyContinue
+    if ($running) {
+        Write-Warn "closing the running Phone Debug"
+        $running | Stop-Process -Force
+        Start-Sleep -Milliseconds 500
+    }
+
+    New-Item -ItemType Directory -Force -Path $binDir | Out-Null
+
+    foreach ($item in @("PhoneDebug.exe", "phone-debug.exe", "README.md", "LICENSE", "CHANGELOG.md", "THIRD-PARTY-NOTICES.md", "uninstall.ps1", "install.ps1")) {
+        $path = Join-Path $source $item
+        if (Test-Path $path) { Copy-Item $path (Join-Path $binDir $item) -Force }
+    }
+
+    # Framework-dependent packages also ship their .dll and .json files.
+    Get-ChildItem $source -File | Where-Object { $_.Extension -in @(".dll", ".json") } | ForEach-Object {
+        Copy-Item $_.FullName (Join-Path $binDir $_.Name) -Force
+    }
+
+    $toolsSource = Join-Path $source "tools"
+    if (Test-Path $toolsSource) {
+        Copy-Item $toolsSource $binDir -Recurse -Force
+    }
+    else {
+        New-Item -ItemType Directory -Force -Path (Join-Path $binDir "tools") | Out-Null
+    }
+
+    Write-Ok "files copied"
+}
+
+# ---------------------------------------------------------------- 3. PATH
+
+if ($NoPath) {
+    Write-Title "PATH (skipped)"
+}
+else {
+    Write-Title "Adding phone-debug to your PATH"
+
+    $userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
+    if (-not $userPath) { $userPath = "" }
+
+    $entries = $userPath -split ";" | Where-Object { $_ -ne "" }
+    if ($entries -notcontains $binDir) {
+        $joined = (@($entries) + $binDir) -join ";"
         [Environment]::SetEnvironmentVariable("PATH", $joined, "User")
-        Write-Info "  Adicionado ao PATH: $Dir"
+        Write-Ok "added $binDir"
+    }
+    else {
+        Write-Ok "already on your PATH"
+    }
+
+    # Makes it work in this window too, not only in new ones.
+    if (($env:PATH -split ";") -notcontains $binDir) {
+        $env:PATH = "$env:PATH;$binDir"
     }
 }
 
-function Remove-FromUserPath([string]$Dir) {
-    $current = Get-UserPath
-    $novo = (($current -split ";") | Where-Object { $_ -ne "" -and $_ -ne $Dir }) -join ";"
-    [Environment]::SetEnvironmentVariable("PATH", $novo, "User")
+# ---------------------------------------------------------------- 4. shortcut
+
+if ($NoShortcut) {
+    Write-Title "Start Menu shortcut (skipped)"
 }
+else {
+    Write-Title "Adding a Start Menu shortcut"
+    try {
+        $startMenu = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
+        $shortcut = Join-Path $startMenu "Phone Debug.lnk"
 
-function Test-Command([string]$Name) {
-    return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
-}
+        $shell = New-Object -ComObject WScript.Shell
+        $link = $shell.CreateShortcut($shortcut)
+        $link.TargetPath = Join-Path $binDir "PhoneDebug.exe"
+        $link.WorkingDirectory = $binDir
+        $link.Description = "Phone Debug"
+        $link.Save()
 
-Write-Info "================================="
-Write-Info "  Phone Debug Terminal"
-Write-Info "================================="
-Write-Info ""
-
-if ($Uninstall) {
-    Write-Info "A remover..."
-    if (Test-Path $installDir) {
-        Remove-Item -Recurse -Force $installDir
+        Write-Ok "Start Menu > Phone Debug"
     }
-    Remove-FromUserPath $binDir
-    Write-Info "phone-debug removido. Reabre o terminal."
-    exit 0
-}
-
-# 1. Download da release.
-Write-Host "A descarregar phone-debug do GitHub..."
-$url = "https://github.com/$Repo/releases/latest/download/phone-debug.zip"
-$zip = Join-Path $env:TEMP "phone-debug-download.zip"
-
-try {
-    Invoke-WebRequest -Uri $url -OutFile $zip -UseBasicParsing
-}
-catch {
-    Write-Fail "Falha na transferência. Confirma que o repositório '$Repo' tem uma release com 'phone-debug.zip'."
-    exit 1
-}
-
-# 2. Extrair.
-New-Item -ItemType Directory -Force -Path $binDir | Out-Null
-Expand-Archive -Path $zip -DestinationPath $binDir -Force
-Remove-Item -Force $zip
-
-if (-not (Test-Path $exe)) {
-    Write-Fail "phone-debug.exe nao encontrado no pacote descarregado."
-    exit 1
-}
-
-Write-Info "  OK -> $exe"
-
-# 3. PATH do utilizador.
-Add-ToUserPath $binDir
-
-# 4. Dependências: adb + scrcpy.
-$winget = Get-Command winget -ErrorAction SilentlyContinue
-
-if (-not (Test-Command "adb")) {
-    Write-Info "adb nao encontrado. A instalar..."
-    if ($winget) {
-        winget install --id Google.PlatformTools --silent --accept-package-agreements --accept-source-agreements --disable-interactivity | Out-Host
+    catch {
+        Write-Warn "could not create the shortcut: $($_.Exception.Message)"
     }
-    if (-not (Test-Command "adb")) {
-        Write-Info "  winget indisponivel; a descarregar platform-tools diretamente..."
-        $ptZip = Join-Path $env:TEMP "platform-tools.zip"
-        try {
-            Invoke-WebRequest -Uri "https://dl.google.com/android/repository/platform-tools-latest-windows.zip" -OutFile $ptZip -UseBasicParsing
-            $ptDir = Join-Path $installDir "platform-tools"
-            New-Item -ItemType Directory -Force -Path $ptDir | Out-Null
-            Expand-Archive -Path $ptZip -DestinationPath $ptDir -Force
-            Remove-Item -Force $ptZip
-            Add-ToUserPath (Join-Path $ptDir "platform-tools")
+}
+
+# ---------------------------------------------------------------- 5. tools
+
+if (-not $SkipDependencyCheck) {
+    Write-Title "Checking adb and scrcpy"
+
+    $winget = Get-Command winget -ErrorAction SilentlyContinue
+
+    foreach ($tool in @(
+            @{ Name = "adb"; Package = "Google.PlatformTools"; Label = "ADB (Android platform-tools)" },
+            @{ Name = "scrcpy"; Package = "Genymobile.scrcpy"; Label = "scrcpy" })) {
+
+        if (Test-Tool $tool.Name) {
+            Write-Ok "$($tool.Label) found"
+            continue
         }
-        catch {
-            Write-Host "  AVISO: falhou instalar adb. Instala https://dl.google.com/android/repository/platform-tools-latest-windows.zip" -ForegroundColor Yellow
+
+        if ($winget) {
+            Write-Host "  installing $($tool.Label) with winget..." -ForegroundColor DarkGray
+            winget install --id $tool.Package --silent --accept-package-agreements --accept-source-agreements --disable-interactivity | Out-Host
+
+            if (Test-Tool $tool.Name) {
+                Write-Ok "$($tool.Label) installed"
+            }
+            else {
+                Write-Warn "$($tool.Label) still not on the PATH - reopen your terminal and check again"
+            }
+        }
+        else {
+            Write-Warn "$($tool.Label) is missing and winget is not available."
+            Write-Host "    Install it manually, then rerun this script:" -ForegroundColor DarkGray
+            Write-Host "      winget install $($tool.Package)" -ForegroundColor DarkGray
+            Write-Host "    Or copy $($tool.Name).exe into: $binDir\tools" -ForegroundColor DarkGray
         }
     }
 }
 
-if (-not (Test-Command "scrcpy")) {
-    Write-Info "scrcpy nao encontrado. A instalar..."
-    if ($winget) {
-        winget install --id Genymobile.scrcpy --silent --accept-package-agreements --accept-source-agreements --disable-interactivity | Out-Host
-    }
-    if (-not (Test-Command "scrcpy")) {
-        Write-Host "falha: instala scrcpy com: winget install Genymobile.scrcpy" -ForegroundColor Yellow
-    }
-}
+# ---------------------------------------------------------------- done
 
-# 5. Fim.
-Write-Info ""
-Write-Info "Instalado com sucesso!"
-Write-Info "Reabre o terminal e corre:   phone-debug"
-Write-Info "Outros comandos: phone-debug help"
-Write-Info ""
-Write-Info "Desinstalar: descarrega de novo este script e corre-o com -Uninstall"
+Write-Host ""
+Write-Host "Installed." -ForegroundColor Green
+Write-Host ""
+Write-Host "  Open a NEW terminal and run:  phone-debug" -ForegroundColor White
+Write-Host "  Or start 'Phone Debug' from the Start Menu for the window." -ForegroundColor White
+Write-Host ""
+Write-Host "  Uninstall with:  powershell -ExecutionPolicy Bypass -File `"$binDir\uninstall.ps1`"" -ForegroundColor DarkGray
+Write-Host ""

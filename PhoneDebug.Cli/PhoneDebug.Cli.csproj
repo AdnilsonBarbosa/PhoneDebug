@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>phone-debug</AssemblyName>
+    <RootNamespace>PhoneDebug.Cli</RootNamespace>
+    <Description>Phone Debug command line.</Description>
+    <ApplicationIcon>..\assets\phone-debug.ico</ApplicationIcon>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PhoneDebug.Core\PhoneDebug.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PhoneDebug.Tests" />
+  </ItemGroup>
+
+</Project>
