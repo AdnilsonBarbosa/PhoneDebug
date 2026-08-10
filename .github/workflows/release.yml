@@ -44,6 +44,18 @@ jobs:
             dist/**/phone-debug.exe
             dist/**/PhoneDebug.exe
 
+      - name: Compute SHA-256 checksums
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem ./dist -Recurse -File |
+            Where-Object { $_.Extension -in ".zip", ".exe" }
+          foreach ($file in $files) {
+            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $file.FullName).Hash
+            Add-Content -LiteralPath ./dist/SHA256SUMS.txt \
+              "$hash  $($file.Name)"
+          }
+          Get-Content ./dist/SHA256SUMS.txt
+
       - name: Attach to release
         uses: softprops/action-gh-release@v2
         with:
@@ -51,4 +63,5 @@ jobs:
             ${{ steps.package.outputs.zip }}
             ${{ steps.package.outputs.cli }}
             ${{ steps.package.outputs.app }}
+            dist/SHA256SUMS.txt
           generate_release_notes: true
