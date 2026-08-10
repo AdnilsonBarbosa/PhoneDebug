@@ -485,72 +485,6 @@
 </footer>
 
 <script>
-  // Debug console: open the site with #debug in the URL to get a small
-  // floating button (bottom-right) that shows every error/message on screen.
-  // Handy on Android, where DevTools are not easy to reach.
-  (function () {
-    const DEBUG = location.hash.indexOf("debug") !== -1;
-    if (!DEBUG) return;
-
-    var lines = [];
-    var open = false;
-    var box, out, btn;
-
-    btn = document.createElement("button");
-    btn.type = "button";
-    btn.textContent = "log";
-    btn.style.cssText = "position:fixed;right:10px;bottom:10px;z-index:2147483000;background:#111;color:#e5e7eb;border:1px solid #444;border-radius:8px;padding:4px 10px;font:11px monospace;cursor:pointer;opacity:.9";
-    btn.addEventListener("click", function () {
-      open = !open;
-      if (open) {
-        box.style.display = "block";
-        render();
-      } else {
-        box.style.display = "none";
-      }
-    });
-
-    box = document.createElement("div");
-    box.style.cssText = "position:fixed;right:10px;bottom:36px;width:min(420px,94vw);max-height:55vh;overflow:auto;z-index:2147482999;background:#111;color:#e5e7eb;border:1px solid #444;border-radius:8px;padding:6px;font:11px/1.45 monospace;white-space:pre-wrap;word-break:break-word;display:none;pointer-events:auto";
-    out = document.createElement("div");
-    box.appendChild(out);
-    document.body.appendChild(btn);
-    document.body.appendChild(box);
-
-    function render() {
-      out.textContent = lines.slice(-200).join("\n");
-      box.scrollTop = box.scrollHeight;
-    }
-    function log(kind, args) {
-      var time = new Date().toISOString().slice(11, 23);
-      var text = "";
-      for (var i = 0; i < args.length; i++) {
-        var a = args[i];
-        var s;
-        try { s = typeof a === "object" ? JSON.stringify(a) : String(a); }
-        catch (e) { s = String(a); }
-        if (i > 0) text += " ";
-        text += s;
-      }
-      lines.push("[" + time + "] " + kind + " " + text);
-      if (lines.length > 500) lines = lines.slice(-500);
-      if (open) render();
-    }
-
-    window.addEventListener("error", function (e) {
-      log("ERROR", [e.message, "at", (e.filename || "") + ":" + e.lineno]);
-    });
-    window.addEventListener("unhandledrejection", function (e) {
-      log("REJECTED", [String(e.reason)]);
-    });
-
-    var origInfo = console.info, origWarn = console.warn, origError = console.error;
-    console.info = function () { log("INFO", arguments); origInfo.apply(console, arguments); };
-    console.warn = function () { log("WARN", arguments); origWarn.apply(console, arguments); };
-    console.error = function () { log("ERROR", arguments); origError.apply(console, arguments); };
-    window.__debugLog = log;
-  })();
-
   (async () => {
     // Static fallback so the version is correct even when the GitHub API is
     // unreachable (common on mobile networks). The API only refines it.
@@ -570,9 +504,7 @@
         btn.textContent = "Download the Windows app v" + ver;
         btn.dataset.ver = ver;
       }
-      if (window.__debugLog) window.__debugLog("INFO", ["release fetch ok:", rel.tag_name, "zip:", zip ? zip.name : "none"]);
     } catch (e) {
-      if (window.__debugLog) window.__debugLog("ERROR", ["release fetch failed:", String(e)]);
       /* keep the static version and the default link to the releases page */
     }
   })();
