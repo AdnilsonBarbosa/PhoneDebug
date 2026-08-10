@@ -57,7 +57,7 @@ jobs:
           Get-Content ./dist/SHA256SUMS.txt
 
       - name: Attach to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             ${{ steps.package.outputs.zip }}
