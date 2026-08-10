@@ -8,6 +8,9 @@
 - adb/scrcpy are no longer installed through winget by the installer; they are
   fetched on demand instead (opt out with `PHONEDEBUG_NO_DOWNLOAD=1`)
 - Tool downloads stream progress and land version-pinned, official binaries
+- The Windows app gets a redesigned UI: rounded cards, status chips, hover
+  states and a cleaner palette
+- Releases now include a `SHA256SUMS.txt` so downloads can be verified
 
 ## 0.3.0
 
