@@ -456,6 +456,16 @@
         scan from the phone - no cable involved after that.</p>
       </details>
       <details>
+        <summary>Windows says the download is "insecure" - is it safe?</summary>
+        <p>That is SmartScreen / Edge blocking any brand-new executable that has
+        no code-signing certificate yet. The files are the official builds from
+        this repository. To keep them: choose <em>More info</em> then <em>Run
+        anyway</em> (Edge) or <em>Keep</em> (Chrome) on the download. After a
+        few people do this, Windows learns to trust them. Every release also
+        carries a <code>SHA256SUMS.txt</code> and signed build provenance, so
+        you can verify the files are exactly what the project shipped.</p>
+      </details>
+      <details>
         <summary>What does this cost?</summary>
         <p>Nothing. Phone Debug is MIT licensed, and the whole project is on
         GitHub. Releases carry signed build provenance you can verify.</p>
