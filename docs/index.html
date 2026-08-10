@@ -485,33 +485,66 @@
 </footer>
 
 <script>
-  // Debug overlay: open the site with #debug in the URL to see every error
-  // and message on screen (handy on Android, where DevTools are not easy).
+  // Debug console: open the site with #debug in the URL to get a small
+  // floating button (bottom-right) that shows every error/message on screen.
+  // Handy on Android, where DevTools are not easy to reach.
   (function () {
     const DEBUG = location.hash.indexOf("debug") !== -1;
     if (!DEBUG) return;
 
-    const host = document.createElement("div");
-    host.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:9999;max-height:50vh;overflow:auto;background:#111;color:#e5e7eb;font:12px/1.4 monospace;padding:8px;white-space:pre-wrap;word-break:break-all";
-    host.setAttribute("data-debug-console", "");
-    document.body.appendChild(host);
+    var lines = [];
+    var open = false;
+    var box, out, btn;
 
-    const lines = [];
+    btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "log";
+    btn.style.cssText = "position:fixed;right:10px;bottom:10px;z-index:2147483000;background:#111;color:#e5e7eb;border:1px solid #444;border-radius:8px;padding:4px 10px;font:11px monospace;cursor:pointer;opacity:.9";
+    btn.addEventListener("click", function () {
+      open = !open;
+      if (open) {
+        box.style.display = "block";
+        render();
+      } else {
+        box.style.display = "none";
+      }
+    });
+
+    box = document.createElement("div");
+    box.style.cssText = "position:fixed;right:10px;bottom:36px;width:min(420px,94vw);max-height:55vh;overflow:auto;z-index:2147482999;background:#111;color:#e5e7eb;border:1px solid #444;border-radius:8px;padding:6px;font:11px/1.45 monospace;white-space:pre-wrap;word-break:break-word;display:none;pointer-events:auto";
+    out = document.createElement("div");
+    box.appendChild(out);
+    document.body.appendChild(btn);
+    document.body.appendChild(box);
+
+    function render() {
+      out.textContent = lines.slice(-200).join("\n");
+      box.scrollTop = box.scrollHeight;
+    }
     function log(kind, args) {
-      const time = new Date().toISOString().slice(11, 23);
-      const text = Array.from(args).map(a => {
-        try { return typeof a === "object" ? JSON.stringify(a) : String(a); }
-        catch { return String(a); }
-      }).join(" ");
+      var time = new Date().toISOString().slice(11, 23);
+      var text = "";
+      for (var i = 0; i < args.length; i++) {
+        var a = args[i];
+        var s;
+        try { s = typeof a === "object" ? JSON.stringify(a) : String(a); }
+        catch (e) { s = String(a); }
+        if (i > 0) text += " ";
+        text += s;
+      }
       lines.push("[" + time + "] " + kind + " " + text);
-      host.textContent = lines.join("\n");
-      host.scrollTop = host.scrollHeight;
+      if (lines.length > 500) lines = lines.slice(-500);
+      if (open) render();
     }
 
-    window.addEventListener("error", e => log("ERROR", [e.message, "at", e.filename + ":" + e.lineno]));
-    window.addEventListener("unhandledrejection", e => log("REJECTED", [String(e.reason)]));
+    window.addEventListener("error", function (e) {
+      log("ERROR", [e.message, "at", (e.filename || "") + ":" + e.lineno]);
+    });
+    window.addEventListener("unhandledrejection", function (e) {
+      log("REJECTED", [String(e.reason)]);
+    });
 
-    const origInfo = console.info, origWarn = console.warn, origError = console.error;
+    var origInfo = console.info, origWarn = console.warn, origError = console.error;
     console.info = function () { log("INFO", arguments); origInfo.apply(console, arguments); };
     console.warn = function () { log("WARN", arguments); origWarn.apply(console, arguments); };
     console.error = function () { log("ERROR", arguments); origError.apply(console, arguments); };
@@ -519,23 +552,28 @@
   })();
 
   (async () => {
+    // Static fallback so the version is correct even when the GitHub API is
+    // unreachable (common on mobile networks). The API only refines it.
+    var btn = document.getElementById("dl-btn");
+    if (btn) {
+      btn.textContent = "Download the Windows app v0.4.0";
+      btn.dataset.ver = "0.4.0";
+    }
     try {
-      const res = await fetch("https://api.github.com/repos/AdnilsonBarbosa/PhoneDebug/releases/latest");
+      const res = await fetch("https://api.github.com/repos/AdnilsonBarbosa/PhoneDebug/releases/latest", { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
       const rel = await res.json();
+      const ver = String(rel.tag_name).replace(/^v/, "");
       const zip = (rel.assets || []).find(a => /\.zip$/i.test(a.name) && /win-x64/i.test(a.name));
-      const btn = document.getElementById("dl-btn");
-      if (zip && btn) {
-        btn.href = zip.browser_download_url;
-        btn.textContent = "Download the Windows app v" + String(rel.tag_name).replace(/^v/, "");
+      if (btn) {
+        btn.href = (zip && zip.browser_download_url) || btn.href;
+        btn.textContent = "Download the Windows app v" + ver;
+        btn.dataset.ver = ver;
       }
-      if (window.__debugLog) {
-        window.__debugLog("INFO", ["release fetch ok:", rel.tag_name, "zip:", zip ? zip.name : "none"]);
-      }
+      if (window.__debugLog) window.__debugLog("INFO", ["release fetch ok:", rel.tag_name, "zip:", zip ? zip.name : "none"]);
     } catch (e) {
-      if (window.__debugLog) {
-        window.__debugLog("ERROR", ["release fetch failed:", String(e)]);
-      }
-      /* keep the default link to the releases page */
+      if (window.__debugLog) window.__debugLog("ERROR", ["release fetch failed:", String(e)]);
+      /* keep the static version and the default link to the releases page */
     }
   })();
 </script>
